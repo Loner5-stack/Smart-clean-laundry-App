@@ -1,0 +1,99 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { 
+  Users, 
+  Settings, 
+  Database, 
+  Briefcase,
+  CreditCard,
+  LogOut,
+  ArrowLeft
+} from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+const TECH_SECTIONS = [
+  {
+    title: "TECHNICAL (RESTRICTED)",
+    items: [
+      { href: "/admin/customers", icon: Users, label: "Customers" },
+      { href: "/admin/subscriptions", icon: CreditCard, label: "Subscriptions" },
+      { href: "/admin/services", icon: Briefcase, label: "Services" },
+      { href: "/admin/settings", icon: Settings, label: "Settings" },
+    ],
+  }
+];
+
+export function TechSidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="w-64 bg-white dark:bg-[#111827] border-r border-gray-200 dark:border-white/10 flex flex-col h-full shadow-[4px_0_24px_rgba(0,0,0,0.05)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.2)] z-20 shrink-0">
+      {/* Brand */}
+      <div className="h-20 flex items-center px-6 border-b border-gray-200 dark:border-white/10 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="bg-red-500 w-8 h-8 rounded-lg flex items-center justify-center">
+            <Database className="text-white" size={16} />
+          </div>
+          <span className="font-extrabold text-lg text-gray-900 dark:text-white tracking-tight">
+            Tech Portal
+          </span>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-4 py-6 space-y-6 overflow-y-auto custom-scrollbar">
+        {TECH_SECTIONS.map((section) => (
+          <div key={section.title}>
+            <h3 className="px-3 text-[10px] font-bold text-gray-500 dark:text-gray-400 tracking-wider mb-2">
+              {section.title}
+            </h3>
+            <div className="space-y-1">
+              {section.items.map(({ href, icon: Icon, label }) => {
+                const isActive = pathname === href || pathname.startsWith(`${href}/`);
+                
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-all group ${
+                      isActive
+                        ? "bg-red-500 text-white shadow-md"
+                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
+                    }`}
+                  >
+                    <Icon size={18} className={isActive ? "text-white" : "text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors"} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Footer Area */}
+      <div className="p-4 border-t border-gray-200 dark:border-white/10 shrink-0 space-y-2">
+        <Link 
+          href="/admin"
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" />
+          Back to Operations
+        </Link>
+        
+        <button 
+          onClick={() => {
+            sessionStorage.removeItem("tech_passkey_verified");
+            sessionStorage.removeItem("tech_passkey");
+            window.location.href = "/admin/tech-login";
+          }}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+        >
+          <LogOut size={18} />
+          Lock Session
+        </button>
+      </div>
+    </aside>
+  );
+}

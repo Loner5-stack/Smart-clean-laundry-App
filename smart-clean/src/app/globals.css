@@ -1,0 +1,142 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  /* 💡 OUR BRAND TOKENS */
+  --color-brand-cobalt: #2962ff;
+  --color-brand-sunset: #fc9d41;
+  --color-brand-gold: #c5a572;
+  --color-brand-obsidian: #0b1118;
+  --color-brand-paper: #f8fafc;
+
+  /* 💡 PREMIUM GLOW EFFECTS */
+  --shadow-float: 0 10px 30px rgba(41, 98, 255, 0.08);
+  --shadow-glow: 0 4px 20px rgba(252, 157, 65, 0.4);
+}
+
+@layer base {
+  :root {
+    /* LIGHT MODE BACKGROUNDS */
+    --background: 210 40% 98%; /* Maps to brand-paper */
+    --foreground: 215 28% 9%; /* Maps to brand-obsidian */
+
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 215 28% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 28% 9%;
+
+    /* OUR BRAND COLORS MAPPED TO UI */
+    --primary: 224 100% 58%; /* Electric Cobalt */
+    --primary-foreground: 0 0% 100%; /* White text on Cobalt */
+
+    --destructive: 29 97% 62%; /* Sunset Pop */
+    --destructive-foreground: 0 0% 100%;
+
+    /* BORDERS & RINGS */
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 224 100% 58%; /* Cobalt focus rings! */
+    --radius: 0.5rem;
+
+    /* MUTED GRAYS */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+  }
+
+  .dark {
+    /* DARK MODE BACKGROUNDS */
+    --background: 215 28% 9%; /* Maps to brand-obsidian */
+    --foreground: 210 40% 98%; /* Maps to brand-paper */
+
+    --card: 215 28% 13%; /* Slightly lighter than obsidian */
+    --card-foreground: 210 40% 98%;
+    --popover: 215 28% 13%;
+    --popover-foreground: 210 40% 98%;
+
+    /* OUR BRAND COLORS (They pop perfectly in dark mode) */
+    --primary: 224 100% 58%; /* Electric Cobalt */
+    --primary-foreground: 0 0% 100%;
+
+    --destructive: 29 97% 62%; /* Sunset Pop */
+    --destructive-foreground: 0 0% 100%;
+
+    /* BORDERS & RINGS */
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224 100% 58%; /* Cobalt focus rings! */
+
+    /* MUTED GRAYS */
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+  }
+}
+
+/* 💡 CUSTOM BACKGROUND UTILITIES */
+@utility bg-flare-light {
+  background-image: linear-gradient(
+    185deg,
+    #6b9dfa 0%,
+    #9bc2ff 25%,
+    #e3efff 50%,
+    #9bc2ff 75%,
+    #6b9dfa 100%
+  );
+}
+
+/* 👇 ADD THIS NEW UTILITY FOR DARK MODE */
+@utility bg-ambient-dark {
+  background-image: linear-gradient(
+    135deg,
+    #cca97a 0%,
+    /* Warm, muted gold at the top left */ #a2a8b3 45%,
+    /* Smooth greyish blending zone in the middle */ #6b9dfa 100%
+      /* 💡 TWEAK: Changed to match the exact rich blue from light mode */
+  );
+}
+
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ?? AURORA BACKGROUND ANIMATION */
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}
+
+@utility animate-aurora {
+  animation: aurora 60s linear infinite;
+}
+
+/* CUSTOM SCROLLBARS */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #2962ff transparent;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #2962ff;
+  border-radius: 20px;
+}
+

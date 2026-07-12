@@ -1,0 +1,65 @@
+interface BrandLogoProps {
+  width?: number;
+  height?: number;
+}
+export const BrandLogo = ({ width = 40, height = 42 }: BrandLogoProps) => {
+  return (
+    <svg
+      width={width}
+      height={height}
+      viewBox="0 0 56 58"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0"
+    >
+      <defs>
+        <linearGradient id="vibrant-gold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#E2C18C" />
+          <stop offset="100%" stopColor="#B38D4A" />
+        </linearGradient>
+        <filter id="droplet-shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodColor="#000000" floodOpacity="0.15" />
+        </filter>
+      </defs>
+
+      {/* Outer rings */}
+      <rect width="56" height="58" rx="28" fill="url(#vibrant-gold)" />
+      <rect x="2" y="2" width="52" height="54" rx="26" fill="white" />
+      
+      {/* Main blue circle */}
+      <rect
+        x="4.5"
+        y="4.5"
+        width="47"
+        height="49"
+        rx="23.5"
+        fill="#2962FF"
+        stroke="white"
+      />
+
+      {/* Horizontal line */}
+      <path
+        d="M9 31.5C9 30.1193 10.1193 29 11.5 29H44.5C45.8807 29 47 30.1193 47 31.5C47 32.8807 45.8807 34 44.5 34H11.5C10.1193 34 9 32.8807 9 31.5Z"
+        fill="white"
+      />
+
+      {/* Droplet 1: Sunset Gold */}
+      <path
+        d="M21.9619 18.0098C22.2896 17.9629 22.5331 18.0887 22.6162 18.1357C22.7203 18.1947 22.7968 18.2618 22.8418 18.3037C23.0025 18.4532 23.1903 18.7018 23.4443 19.0801C23.9839 19.8835 25.0289 21.5908 27.0801 25.2295C29.2358 29.0535 29.4607 32.4639 28.3291 34.9961C27.1952 37.5332 24.7731 39 22.0947 39C19.3804 38.9999 16.9052 37.3603 15.7275 34.7939C14.5376 32.2007 14.7064 28.7719 16.9863 25.1846L21.2305 18.5059C21.3535 18.2944 21.5911 18.0629 21.9619 18.0098Z"
+        fill="url(#vibrant-gold)"
+        stroke="white"
+        strokeWidth="2"
+        filter="url(#droplet-shadow)"
+      />
+
+      {/* Droplet 2: Blue */}
+      <path
+        d="M31.0107 14.0107C31.346 13.9619 31.596 14.0921 31.6836 14.1426C31.7927 14.2054 31.8758 14.2781 31.9287 14.3281C32.1211 14.5102 32.3731 14.8419 32.7559 15.4219C33.553 16.6296 35.1121 19.2205 38.1885 24.7734C41.3667 30.5103 41.6491 35.5305 40.04 39.1943C38.4278 42.8651 34.9819 44.9999 31.1426 45C27.2672 45 23.7281 42.6176 22.043 38.8809C20.3465 35.1187 20.5536 30.0795 23.8965 24.7275L30.2725 14.5195C30.3923 14.3076 30.6296 14.0664 31.0107 14.0107Z"
+        fill="#2962FF"
+        stroke="white"
+        strokeWidth="2"
+        filter="url(#droplet-shadow)"
+      />
+    </svg>
+  );
+};
