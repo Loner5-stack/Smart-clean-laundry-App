@@ -21,3 +21,5 @@ services:
         sync: false
       - key: API_SECRET
         sync: false
+      - key: TECH_PASSKEY
+        sync: false

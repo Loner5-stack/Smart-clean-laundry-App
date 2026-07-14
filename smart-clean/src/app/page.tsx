@@ -124,7 +124,7 @@ export default function WelcomePage() {
 
             <motion.h1
               variants={itemVariants}
-              className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] text-gray-900 dark:text-white mb-4"
+              className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] text-[#10173b] dark:text-white mb-4"
             >
               The{" "}
               <ThemeTransitionText
@@ -159,7 +159,7 @@ export default function WelcomePage() {
                ))}
             </motion.div>
 
-            <motion.div variants={itemVariants} className="w-full sm:w-auto flex flex-col items-center gap-4">
+            <motion.div variants={itemVariants} className="w-full sm:w-auto flex flex-col items-center gap-4 mt-4 lg:mt-8">
               <Link
                 href="/signup"
                 className="inline-flex items-center justify-center gap-3 w-full px-10 py-5 rounded-full bg-brand-cobalt text-white text-lg font-bold shadow-xl shadow-brand-cobalt/30 hover:scale-105 active:scale-95 transition-all duration-300"
@@ -170,6 +170,19 @@ export default function WelcomePage() {
               <Link href="/login" className="lg:hidden text-sm font-medium text-gray-600 dark:text-gray-400 mt-2">
                 Already have an account? <span className="text-brand-cobalt font-bold hover:underline">Sign in</span>
               </Link>
+            </motion.div>
+
+            {/* Rating Component (Hidden on Mobile) */}
+            <motion.div variants={itemVariants} className="hidden lg:flex items-center gap-3 mt-20">
+              <div className="flex -space-x-2">
+                <div className="w-8 h-8 rounded-full bg-[#e8be66] flex items-center justify-center ring-2 ring-blue-500/20 text-white font-bold text-xs z-10 shadow-sm">A</div>
+                <div className="w-8 h-8 rounded-full bg-[#82a3f7] flex items-center justify-center ring-2 ring-blue-500/20 text-white font-bold text-xs z-20 shadow-sm">T</div>
+                <div className="w-8 h-8 rounded-full bg-[#ee9877] flex items-center justify-center ring-2 ring-blue-500/20 text-white font-bold text-xs z-30 shadow-sm">M</div>
+              </div>
+              <div className="text-[#10173b] dark:text-gray-300 text-sm leading-tight">
+                <span className="font-bold text-[15px]">4.9</span> rating from <span className="font-bold text-[15px]">500+</span><br />
+                customers
+              </div>
             </motion.div>
           </motion.div>
 

@@ -57,7 +57,7 @@ export function PopularServices() {
       {/* Horizontally scrollable cards */}
       <div 
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto touch-pan-x overscroll-x-contain pb-3 -mx-4 px-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
+        className="flex gap-4 overflow-x-auto touch-pan-x overscroll-x-contain pb-3 -mx-4 md:-mx-6 px-4 md:px-6 scroll-pl-4 md:scroll-pl-6 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden [scrollbar-width:none]"
       >
         {popularServices.map((service, i) => (
           <motion.div

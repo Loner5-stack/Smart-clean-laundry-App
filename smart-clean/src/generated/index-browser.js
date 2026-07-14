@@ -155,114 +155,12 @@ exports.Prisma.UserScalarFieldEnum = {
   emailVerified: 'emailVerified',
   image: 'image',
   phone: 'phone',
+  address: 'address',
+  password: 'password',
   role: 'role',
   metadata: 'metadata',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
-};
-
-exports.Prisma.RiderScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  vehicleType: 'vehicleType',
-  licensePlate: 'licensePlate',
-  availabilityStatus: 'availabilityStatus',
-  deliveriesCompleted: 'deliveriesCompleted',
-  rating: 'rating',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.OrderScalarFieldEnum = {
-  id: 'id',
-  orderNumber: 'orderNumber',
-  customerId: 'customerId',
-  riderId: 'riderId',
-  status: 'status',
-  totalAmount: 'totalAmount',
-  items: 'items',
-  pickupDetails: 'pickupDetails',
-  paymentStatus: 'paymentStatus',
-  paymentMethod: 'paymentMethod',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.ServiceScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  category: 'category',
-  price: 'price',
-  unit: 'unit',
-  description: 'description',
-  isActive: 'isActive',
-  imagePath: 'imagePath',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.SubscriptionScalarFieldEnum = {
-  id: 'id',
-  customerId: 'customerId',
-  planId: 'planId',
-  status: 'status',
-  renewalDate: 'renewalDate',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.SupportTicketScalarFieldEnum = {
-  id: 'id',
-  ticketNumber: 'ticketNumber',
-  customerId: 'customerId',
-  subject: 'subject',
-  message: 'message',
-  status: 'status',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.AuditLogScalarFieldEnum = {
-  id: 'id',
-  adminId: 'adminId',
-  action: 'action',
-  entityType: 'entityType',
-  entityId: 'entityId',
-  timestamp: 'timestamp'
-};
-
-exports.Prisma.PlanScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  priceKobo: 'priceKobo',
-  billingCycle: 'billingCycle',
-  piecesPerMonth: 'piecesPerMonth',
-  pickupsPerMonth: 'pickupsPerMonth',
-  features: 'features',
-  isPopular: 'isPopular',
-  isActive: 'isActive',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.NotificationScalarFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  type: 'type',
-  title: 'title',
-  message: 'message',
-  isRead: 'isRead',
-  orderId: 'orderId',
-  createdAt: 'createdAt'
-};
-
-exports.Prisma.OrderStatusHistoryScalarFieldEnum = {
-  id: 'id',
-  orderId: 'orderId',
-  status: 'status',
-  changedBy: 'changedBy',
-  note: 'note',
-  changedAt: 'changedAt'
 };
 
 exports.Prisma.SortOrder = {
@@ -272,10 +170,6 @@ exports.Prisma.SortOrder = {
 
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
-  JsonNull: Prisma.JsonNull
-};
-
-exports.Prisma.JsonNullValueInput = {
   JsonNull: Prisma.JsonNull
 };
 
@@ -300,39 +194,11 @@ exports.UserRole = exports.$Enums.UserRole = {
   ADMIN: 'ADMIN'
 };
 
-exports.OrderStatus = exports.$Enums.OrderStatus = {
-  PENDING: 'PENDING',
-  PICKUP_ASSIGNED: 'PICKUP_ASSIGNED',
-  AT_HUB: 'AT_HUB',
-  IN_PRODUCTION: 'IN_PRODUCTION',
-  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
-  COMPLETED: 'COMPLETED',
-  CANCELLED: 'CANCELLED'
-};
-
-exports.NotificationType = exports.$Enums.NotificationType = {
-  ORDER_UPDATE: 'ORDER_UPDATE',
-  RIDER_ASSIGNED: 'RIDER_ASSIGNED',
-  SUBSCRIPTION_RENEWAL: 'SUBSCRIPTION_RENEWAL',
-  SUBSCRIPTION_EXPIRY: 'SUBSCRIPTION_EXPIRY',
-  PAYMENT_CONFIRMED: 'PAYMENT_CONFIRMED',
-  GENERAL: 'GENERAL'
-};
-
 exports.Prisma.ModelName = {
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
-  User: 'User',
-  Rider: 'Rider',
-  Order: 'Order',
-  Service: 'Service',
-  Subscription: 'Subscription',
-  SupportTicket: 'SupportTicket',
-  AuditLog: 'AuditLog',
-  Plan: 'Plan',
-  Notification: 'Notification',
-  OrderStatusHistory: 'OrderStatusHistory'
+  User: 'User'
 };
 
 /**

@@ -1,10 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock, Loader2 } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
-import { FaLinkedin } from "react-icons/fa";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { signupAction } from "@/app/actions/signup";
 import { useAuthLayout } from "@/context/login-auth-layout-context";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -65,13 +67,16 @@ const SocialButton = ({
   icon: Icon,
   label,
   iconColor,
+  onClick,
 }: {
   icon: any;
   label: string;
   iconColor?: string;
+  onClick?: () => void;
 }) => (
   <button
     type="button"
+    onClick={onClick}
     className="flex-1 flex items-center justify-center gap-2.5 py-3.5 px-4 border border-gray-200 dark:border-white/10 rounded-xl hover:bg-white dark:hover:bg-white/5 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 text-sm font-bold text-gray-700 dark:text-white bg-gray-50/50 dark:bg-black/10 backdrop-blur-sm"
   >
     <Icon size={20} color={iconColor} />
@@ -87,7 +92,10 @@ export function SignupFormContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [serverError, setServerError] = useState("");
+  const [isPending, startTransition] = useTransition();
   const { isExpanded } = useAuthLayout();
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -99,7 +107,8 @@ export function SignupFormContent() {
     const password = formData.get("password") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
     const terms = formData.get("terms");
-    
+
+    // ── Client-side validation ───────────────────────────────────────────
     const newErrors: Record<string, string> = {};
     if (!fullName) newErrors.fullName = "Full name is required";
     if (!email) newErrors.email = "Email address is required";
@@ -109,14 +118,25 @@ export function SignupFormContent() {
     if (!confirmPassword) newErrors.confirmPassword = "Confirm password is required";
     else if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
     if (!terms) newErrors.terms = "You must agree to the terms";
-    
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     setErrors({});
-    // Proceed with signup...
+    setServerError("");
+
+    // ── Call server action ───────────────────────────────────────────────
+    startTransition(async () => {
+      const result = await signupAction(formData);
+      if (!result.success) {
+        setServerError(result.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+      // Account created — redirect to login so user signs in
+      router.push("/login?registered=true");
+    });
   };
 
   const scrollClasses = isExpanded
@@ -304,13 +324,32 @@ export function SignupFormContent() {
             )}
           </div>
 
+          {/* Server Error */}
+          {serverError && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+            >
+              <p className="text-sm text-red-600 dark:text-red-400 font-medium">{serverError}</p>
+            </motion.div>
+          )}
+
           {/* Submit Action */}
           <div className="pt-4">
             <button
               type="submit"
-              className="relative overflow-hidden w-full p-4 text-white rounded-xl font-bold hover:shadow-[0_8px_30px_rgb(41,98,255,0.3)] hover:shadow-brand-cobalt/30 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-300 tracking-wide bg-linear-to-r from-brand-cobalt to-blue-500"
+              disabled={isPending}
+              className="relative overflow-hidden w-full p-4 text-white rounded-xl font-bold hover:shadow-[0_8px_30px_rgb(41,98,255,0.3)] hover:shadow-brand-cobalt/30 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-300 tracking-wide bg-linear-to-r from-brand-cobalt to-blue-500 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
-              Create Account
+              {isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={18} className="animate-spin" />
+                  Creating Account...
+                </span>
+              ) : (
+                "Create Account"
+              )}
             </button>
           </div>
         </form>
@@ -326,12 +365,11 @@ export function SignupFormContent() {
         </div>
 
         {/* Social Authentication */}
-        <div className="flex gap-4 sm:flex-row flex-col">
-          <SocialButton icon={FcGoogle} label="Google" />
+        <div className="flex gap-4">
           <SocialButton
-            icon={FaLinkedin}
-            label="LinkedIn"
-            iconColor="#0A66C2"
+            icon={FcGoogle}
+            label="Continue with Google"
+            onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
           />
         </div>
 

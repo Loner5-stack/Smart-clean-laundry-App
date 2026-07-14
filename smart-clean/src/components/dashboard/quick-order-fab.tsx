@@ -17,10 +17,9 @@ export function QuickOrderFab() {
       <button
         onClick={() => router.push("/dashboard/orders/new")}
         aria-label="New Order"
-        className="flex items-center gap-2 pl-4 pr-5 h-12 rounded-full bg-gradient-to-r from-[#B65B27] to-[#889BD7] text-white font-bold text-sm shadow-xl hover:brightness-110 hover:scale-105 active:scale-95 transition-all duration-300"
+        className="flex items-center justify-center w-14 h-14 rounded-full bg-[#2a62ff] text-white shadow-[0_8px_30px_rgb(42,98,255,0.3)] hover:brightness-110 hover:scale-105 active:scale-95 transition-all duration-300"
       >
-        <Plus size={18} className="shrink-0" />
-        New Order
+        <Plus size={24} />
       </button>
     </motion.div>
   );

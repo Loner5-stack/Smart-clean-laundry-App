@@ -1,38 +1,42 @@
-// middleware.ts
+﻿import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 
-// 💡 This function runs BEFORE any page loads.
-export function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
+// We initialize auth using ONLY the edge-compatible config for the middleware.
+const { auth } = NextAuth(authConfig);
 
-  // Protect /admin routes (except /admin/login)
+export default auth((request) => {
+  const { nextUrl, auth: session } = request;
+  const isLoggedIn = !!session;
+  const path = nextUrl.pathname;
+
+  if (path.startsWith("/dashboard") && !isLoggedIn) {
+    return NextResponse.redirect(new URL("/login", nextUrl));
+  }
+
   if (path.startsWith("/admin") && !path.startsWith("/admin/login")) {
-    const token = request.cookies.get("admin_token");
-    if (!token) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL("/admin/login", nextUrl));
+    }
+    // @ts-expect-error
+    if (session?.user?.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/admin/login", nextUrl));
     }
   }
 
-  // Protect /rider routes (except /rider/login)
   if (path.startsWith("/rider") && !path.startsWith("/rider/login")) {
-    const token = request.cookies.get("rider_token");
-    if (!token) {
-      return NextResponse.redirect(new URL("/rider/login", request.url));
+    if (!isLoggedIn) {
+      return NextResponse.redirect(new URL("/rider/login", nextUrl));
     }
-  }
-
-  // Protect /dashboard routes (except /login or other public pages)
-  if (path.startsWith("/dashboard")) {
-    const token = request.cookies.get("auth_token");
-    if (!token) {
-      return NextResponse.redirect(new URL("/login", request.url));
+    // @ts-expect-error
+    if (session?.user?.role !== "RIDER") {
+      return NextResponse.redirect(new URL("/rider/login", nextUrl));
     }
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ["/admin/:path*", "/staff/:path*", "/dashboard/:path*", "/rider/:path*"],
+  matcher: ["/admin/:path*", "/dashboard/:path*", "/rider/:path*"],
 };

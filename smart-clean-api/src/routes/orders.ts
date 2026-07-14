@@ -44,9 +44,12 @@ export async function orderRoutes(server: FastifyInstance) {
         paymentMethod: string;
       };
 
-      // Generate a SC-XXXX order number
-      const count = await server.prisma.order.count();
-      const orderNumber = `SC-${String(count + 1).padStart(4, "0")}`;
+      // Generate a collision-safe SC-XXXX order number.
+      // We use a timestamp (base-36) + 2 random chars rather than a
+      // simple count() so two concurrent orders can never get the same number.
+      const timestamp = Date.now().toString(36).toUpperCase(); // e.g. "LJH8F2"
+      const rand = Math.random().toString(36).substring(2, 4).toUpperCase(); // e.g. "KT"
+      const orderNumber = `SC-${timestamp}${rand}`;
 
       // Use a transaction to create the order, its history, and a notification atomically
       const result = await server.prisma.$transaction(async (tx: TransactionClient) => {

@@ -8,11 +8,12 @@ import {
   Settings, 
   Database, 
   LogOut,
-  Car,
+  Bike,
   Briefcase,
   CreditCard,
-  LifeBuoy,
-  Lock
+  Phone,
+  Lock,
+  Repeat
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -22,8 +23,9 @@ const NAV_SECTIONS = [
     items: [
       { href: "/admin", icon: LayoutDashboard, label: "Overview" },
       { href: "/admin/orders", icon: ShoppingBag, label: "Orders" },
-      { href: "/admin/riders", icon: Car, label: "Riders" },
-      { href: "/admin/support", icon: LifeBuoy, label: "Support" },
+      { href: "/admin/riders", icon: Bike, label: "Riders" },
+      { href: "/admin/subscribers", icon: Repeat, label: "Subscribers" },
+      { href: "/admin/support", icon: Phone, label: "Support" },
     ],
   },
 ];

@@ -27,8 +27,12 @@ function formatDate(dateStr: string) {
   });
 }
 
+function formatStatus(status: string) {
+  return status.replace(/_/g, " ");
+}
+
 function OrderCard({ order, index }: { order: Order; index: number }) {
-  const isActive = order.status === "In Progress" || order.status === "Pending";
+  const isActive = order.status !== "COMPLETED" && order.status !== "CANCELLED";
 
   return (
     <motion.div
@@ -61,16 +65,16 @@ function OrderCard({ order, index }: { order: Order; index: number }) {
         {/* Status Badge */}
         <span
           className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-            order.status === "In Progress"
+            isActive && order.status !== "PENDING"
               ? "bg-brand-cobalt/10 text-brand-cobalt"
-              : order.status === "Completed"
+              : order.status === "COMPLETED"
                 ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                : order.status === "Cancelled"
+                : order.status === "CANCELLED"
                   ? "bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400"
                   : "bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400"
           }`}
         >
-          {order.status}
+          {formatStatus(order.status)}
         </span>
       </div>
 
@@ -148,10 +152,10 @@ export default function OrdersPage() {
   const [tab, setTab] = useState<Tab>("active");
 
   const activeOrders = mockOrders.filter(
-    (o) => o.status === "In Progress" || o.status === "Pending",
+    (o) => o.status !== "COMPLETED" && o.status !== "CANCELLED",
   );
   const pastOrders = mockOrders.filter(
-    (o) => o.status === "Completed" || o.status === "Cancelled",
+    (o) => o.status === "COMPLETED" || o.status === "CANCELLED",
   );
 
   const displayOrders = tab === "active" ? activeOrders : pastOrders;

@@ -79,6 +79,8 @@ model User {
   emailVerified DateTime?
   image         String?
   phone         String?
+  address       String?
+  password      String?   // bcrypt-hashed — null for OAuth users
   role          UserRole  @default(CUSTOMER)
   metadata      Json?
 

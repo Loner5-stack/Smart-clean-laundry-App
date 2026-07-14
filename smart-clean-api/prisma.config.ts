@@ -9,8 +9,9 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
-    directUrl: process.env["DIRECT_URL"],
+    // db push / migrate uses the DIRECT connection (bypasses PgBouncer)
+    // so it can run DDL statements (CREATE TABLE, ALTER TABLE, etc.)
+    url: process.env["DIRECT_URL"],
   },
 });
 
