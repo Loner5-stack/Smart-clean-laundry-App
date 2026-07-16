@@ -1,3 +1,5 @@
+"use client";
+
 // src/components/auth/login-auth-layout.tsx
 import { BrandLogo } from "../brand-logo";
 import { useState } from "react";

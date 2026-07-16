@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Settings2, MoreHorizontal, ShoppingBag, X } from "lucide-react";
 import { mockAdminServices } from "@/data/mock-admin";
+import { CustomSelect } from "@/components/ui/custom-select";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -127,10 +128,14 @@ export default function AdminServices() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1.5">Category</label>
-                  <select value={newServiceForm.category} onChange={(e) => setNewServiceForm({...newServiceForm, category: e.target.value})} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-cobalt">
-                    <option>Standard</option>
-                    <option>Premium</option>
-                  </select>
+                  <CustomSelect
+                    value={newServiceForm.category}
+                    onChange={(val) => setNewServiceForm({...newServiceForm, category: val})}
+                    options={[
+                      { value: "Standard", label: "Standard" },
+                      { value: "Premium", label: "Premium" }
+                    ]}
+                  />
                 </div>
               </div>
               <div className="p-5 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex gap-3">

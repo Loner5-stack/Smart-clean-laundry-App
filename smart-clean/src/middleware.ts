@@ -1,4 +1,4 @@
-﻿import NextAuth from "next-auth";
+import NextAuth from "next-auth";
 import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
 
@@ -34,9 +34,32 @@ export default auth((request) => {
     }
   }
 
+  // --- Onboarding Logic ---
+  // @ts-expect-error
+  const onboardingComplete = session?.user?.onboardingComplete;
+  const isOnboardingRoute = path.startsWith("/onboarding");
+
+  if (isLoggedIn) {
+    // If they haven't completed onboarding and they are NOT on the onboarding page
+    // and NOT trying to log out (which hits /api/auth/signout)
+    if (!onboardingComplete && !isOnboardingRoute && !path.startsWith("/api/auth")) {
+      return NextResponse.redirect(new URL("/onboarding", nextUrl));
+    }
+
+    // If they HAVE completed onboarding, they shouldn't be on the onboarding page
+    if (onboardingComplete && isOnboardingRoute) {
+      return NextResponse.redirect(new URL("/dashboard", nextUrl));
+    }
+
+    // Don't let logged-in users go to login/signup screens
+    if (path === "/login" || path === "/signup") {
+      return NextResponse.redirect(new URL("/dashboard", nextUrl));
+    }
+  }
+
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*", "/rider/:path*"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

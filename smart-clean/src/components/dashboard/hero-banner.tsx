@@ -1,10 +1,23 @@
 "use client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { CalendarPlus } from "lucide-react";
 
-export function HeroBanner({ isFirstTimeUser = false }: { isFirstTimeUser?: boolean }) {
+export function HeroBanner({ isFirstTimeUser = false, userName = "" }: { isFirstTimeUser?: boolean; userName?: string }) {
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const names = userName.split(" ");
+  const secondName = names.length > 1 ? names[1] : names[0] || "Customer";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -39,10 +52,35 @@ export function HeroBanner({ isFirstTimeUser = false }: { isFirstTimeUser?: bool
         {/* CTA */}
         <Link
           href="/dashboard/orders/new"
-          className="inline-flex items-center gap-2 px-6 py-3.5 rounded-full bg-white text-brand-cobalt text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
+          className="inline-flex items-center justify-center min-w-[220px] px-6 py-3.5 rounded-full bg-white text-brand-cobalt text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
+          style={{ perspective: "1000px" }}
         >
-          <CalendarPlus size={18} strokeWidth={2.5} />
-          Start Your First Order
+          <AnimatePresence mode="wait">
+            {showWelcome ? (
+              <motion.div
+                key="welcome"
+                initial={{ opacity: 0, rotateX: -90, transformOrigin: "top" }}
+                animate={{ opacity: 1, rotateX: 0 }}
+                exit={{ opacity: 0, rotateX: 90, transformOrigin: "bottom" }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="flex items-center gap-2"
+              >
+                <span className="text-xl leading-none">👋</span>
+                Welcome, {secondName}!
+              </motion.div>
+            ) : (
+              <motion.div
+                key="cta"
+                initial={{ opacity: 0, rotateX: -90, transformOrigin: "top" }}
+                animate={{ opacity: 1, rotateX: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="flex items-center gap-2"
+              >
+                <CalendarPlus size={18} strokeWidth={2.5} />
+                {isFirstTimeUser ? "Start Your First Order" : "Continue Ordering"}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Link>
       </div>
 

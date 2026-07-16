@@ -1,6 +1,7 @@
 import { ContactCards } from "@/components/dashboard/support/contact-cards";
 import { ContactForm } from "@/components/dashboard/support/contact-form";
 import { FaqAccordion } from "@/components/dashboard/support/faq-accordion";
+import { BackButton } from "@/components/ui/back-button";
 
 export const metadata = {
   title: "Support | Smart-Clean",
@@ -11,13 +12,16 @@ export default function SupportPage() {
   return (
     <div className="px-4 md:px-6 py-6 md:py-8 max-w-5xl mx-auto space-y-8 md:space-y-12">
       {/* Header section */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
-          How can we help you?
-        </h1>
-        <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 max-w-xl leading-relaxed">
-          Whether you have a question about an active order, a billing inquiry, or just want to leave feedback, our team is ready to assist you.
-        </p>
+      <div className="relative">
+        <BackButton className="mb-4 lg:absolute lg:-left-25 lg:top-0 lg:mb-0 w-10 h-10 lg:w-12 lg:h-12" />
+        <div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white mb-2">
+            How can we help you?
+          </h1>
+          <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 max-w-xl leading-relaxed">
+            Whether you have a question about an active order, a billing inquiry, or just want to leave feedback, our team is ready to assist you.
+          </p>
+        </div>
       </div>
 
       {/* Quick Contact Cards */}

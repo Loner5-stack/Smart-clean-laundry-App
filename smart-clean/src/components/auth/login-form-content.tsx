@@ -9,6 +9,8 @@ import { signIn } from "next-auth/react";
 import { useAuthLayout } from "@/context/login-auth-layout-context";
 import { loginAction } from "@/app/actions/login";
 
+import { ScrollArea } from "@/components/ui/scroll-area";
+
 const SocialButton = ({
   icon: Icon,
   label,
@@ -83,8 +85,8 @@ export function LoginFormContent() {
   };
 
   const scrollClasses = isExpanded
-    ? "max-h-[75vh] overflow-y-auto lg:max-h-none lg:overflow-y-visible touch-pan-y pr-2 pl-1 pb-24 lg:pb-0 custom-scrollbar"
-    : "max-h-[50vh] overflow-y-auto lg:max-h-none lg:overflow-y-visible touch-pan-y pr-2 pl-1 pb-8 lg:pb-0 custom-scrollbar";
+    ? "h-[80vh] lg:h-auto lg:max-h-[60vh] touch-pan-y pr-4 pb-24 lg:pb-0"
+    : "h-[60vh] lg:h-auto lg:max-h-[60vh] touch-pan-y pr-4 pb-8 lg:pb-0";
 
   return (
     <motion.div
@@ -115,7 +117,9 @@ export function LoginFormContent() {
       )}
 
       {/* Wrapper for mobile scrolling */}
-      <div className={`transition-all duration-500 ease-in-out ${scrollClasses}`}>
+      <ScrollArea
+        className={`transition-all duration-500 ease-in-out ${scrollClasses}`}
+      >
         <form noValidate onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div className="flex flex-col gap-1.5">
@@ -244,7 +248,7 @@ export function LoginFormContent() {
         </div>
 
         {/* New User Prompt */}
-        <div className="mt-6 text-center">
+        <div className="mt-6 pb-16 lg:pb-0 text-center">
           <p className="text-sm text-gray-500 font-medium">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-brand-cobalt font-bold hover:underline">
@@ -252,7 +256,7 @@ export function LoginFormContent() {
             </Link>
           </p>
         </div>
-      </div>
+      </ScrollArea>
     </motion.div>
   );
 }

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, MoreHorizontal, Calendar, X, Eye, Truck, User, CreditCard } from "lucide-react";
 import { mockAdminSubscriptions, mockAdminRiders, AdminSubscription } from "@/data/mock-admin";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 export default function OperationalSubscribersPage() {
   const [search, setSearch] = useState("");
@@ -190,18 +191,17 @@ export default function OperationalSubscribersPage() {
                           <label className="block text-xs font-bold text-gray-500 mb-2 flex items-center gap-1.5">
                             <Truck size={14} /> Assign Rider for this date
                           </label>
-                          <select 
+                          <CustomSelect 
                             value={pickup.assignedRiderId || ""}
-                            onChange={(e) => handleAssignRider(pickup.id, e.target.value)}
-                            className="w-full bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-white/10 rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-cobalt text-gray-900 dark:text-white"
-                          >
-                            <option value="">-- Unassigned --</option>
-                            {mockAdminRiders.map(rider => (
-                              <option key={rider.id} value={rider.id}>
-                                {rider.name} ({rider.status})
-                              </option>
-                            ))}
-                          </select>
+                            onChange={(val) => handleAssignRider(pickup.id, val)}
+                            options={[
+                              { value: "", label: "-- Unassigned --" },
+                              ...mockAdminRiders.map(rider => ({
+                                value: rider.id,
+                                label: `${rider.name} (${rider.status})`
+                              }))
+                            ]}
+                          />
                         </div>
                       </div>
                     ))}

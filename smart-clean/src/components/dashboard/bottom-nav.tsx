@@ -16,7 +16,7 @@ const mainTabs = [
   { id: "account", href: "/dashboard/account", label: "Account", icon: PiUserCirclePlusDuotone },
 ];
 
-export function BottomNav() {
+export function BottomNav({ user }: { user?: any }) {
   const pathname = usePathname();
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
 
@@ -68,10 +68,16 @@ export function BottomNav() {
             href={href}
             className="flex flex-col items-center gap-0.5 px-4 pt-1 pb-0.5 rounded-xl transition-all w-[80px]"
           >
-            <Icon
-              size={26}
-              className={isActive ? "text-brand-cobalt" : "text-gray-400 dark:text-gray-500"}
-            />
+            {id === "account" && user?.image ? (
+              <div className={`w-[26px] h-[26px] rounded-full overflow-hidden border-2 ${isActive ? 'border-brand-cobalt shadow-sm' : 'border-transparent'}`}>
+                <img src={user.image} alt="Avatar" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <Icon
+                size={26}
+                className={isActive ? "text-brand-cobalt" : "text-gray-400 dark:text-gray-500"}
+              />
+            )}
             <span
               className={`text-[10px] font-semibold ${
                 isActive ? "text-brand-cobalt" : "text-gray-400 dark:text-gray-500"

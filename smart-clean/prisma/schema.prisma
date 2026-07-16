@@ -7,11 +7,34 @@ datasource db {
   provider = "postgresql"
 }
 
+// ── ENUMS ──────────────────────────────────────────────────────────────
+
 enum UserRole {
   CUSTOMER
   RIDER
   ADMIN
 }
+
+enum OrderStatus {
+  PENDING
+  PICKUP_ASSIGNED
+  AT_HUB
+  IN_PRODUCTION
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  ORDER_UPDATE
+  RIDER_ASSIGNED
+  SUBSCRIPTION_RENEWAL
+  SUBSCRIPTION_EXPIRY
+  PAYMENT_CONFIRMED
+  GENERAL
+}
+
+// ── NEXTAUTH.JS TABLES (required for Auth.js sessions) ─────────────────
 
 model Account {
   id                String  @id @default(cuid())
@@ -26,7 +49,9 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
 
@@ -42,8 +67,11 @@ model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
+
   @@unique([identifier, token])
 }
+
+// ── BUSINESS MODELS ────────────────────────────────────────────────────
 
 model User {
   id            String    @id @default(cuid())
@@ -53,11 +81,163 @@ model User {
   image         String?
   phone         String?
   address       String?
-  password      String?
+  password      String?   // bcrypt-hashed — null for OAuth users
   role          UserRole  @default(CUSTOMER)
   metadata      Json?
+
   accounts      Account[]
   sessions      Session[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  orders        Order[]        @relation("CustomerOrders")
+  riderProfile  Rider?
+  subscriptions Subscription[]
+  tickets       SupportTicket[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Rider {
+  id                  String @id @default(cuid())
+  userId              String @unique
+  user                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vehicleType         String
+  licensePlate        String
+  availabilityStatus  String @default("Offline")
+  deliveriesCompleted Int    @default(0)
+  rating              Float  @default(5.0)
+
+  assignedOrders Order[] @relation("RiderTasks")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  orderNumber   String      @unique
+  customerId    String
+  customer      User        @relation("CustomerOrders", fields: [customerId], references: [id])
+  riderId       String?
+  rider         Rider?      @relation("RiderTasks", fields: [riderId], references: [id])
+  status        OrderStatus @default(PENDING)
+  totalAmount   Decimal     @db.Decimal(10, 2)
+  items         Json
+  pickupDetails Json
+  paymentStatus String      @default("PENDING")
+  paymentMethod String?
+
+  statusHistory OrderStatusHistory[]
+  notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Service {
+  id          String  @id @default(cuid())
+  name        String
+  category    String
+  price       Decimal @db.Decimal(10, 2)
+  unit        String
+  description String
+  isActive    Boolean @default(true)
+  imagePath   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  customerId  String
+  customer    User     @relation(fields: [customerId], references: [id])
+  // FK to Plan table — source of truth for pricing and features
+  planId      String
+  plan        Plan     @relation(fields: [planId], references: [id])
+  status      String   // ACTIVE, CANCELLED, PAST_DUE
+  renewalDate DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SupportTicket {
+  id           String @id @default(cuid())
+  ticketNumber String @unique
+  customerId   String
+  customer     User   @relation(fields: [customerId], references: [id])
+  subject      String
+  message      String
+  status       String @default("OPEN")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  adminId    String
+  action     String
+  entityType String
+  entityId   String
+  timestamp  DateTime @default(now())
+}
+
+model Plan {
+  id               String   @id @default(cuid())
+  name             String   @unique  // "Basic", "Standard", "Premium Family"
+  priceKobo        Int
+  billingCycle     String   @default("monthly") // "monthly" | "yearly"
+  piecesPerMonth   Int
+  pickupsPerMonth  Int
+  features         Json
+  isPopular        Boolean  @default(false)
+  isActive         Boolean  @default(true)
+
+  subscriptions    Subscription[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+
+  orderId   String?
+  order     Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime         @default(now())
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  status    OrderStatus
+  changedBy String
+  note      String?
+
+  changedAt DateTime    @default(now())
+}
+
+model TierSetting {
+  id                 String   @id @default(cuid())
+  level              Int      @unique
+  name               String   @unique // Bronze, Silver, Gold
+  minOrders          Int      @default(0)
+  maxOrders          Int?
+  discountPercentage Float    @default(0)
+  perks              Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

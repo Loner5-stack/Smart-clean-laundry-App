@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Send, CheckCircle2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,46 +74,17 @@ export function ContactForm() {
               <label className="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">
                 What is this regarding?
               </label>
-              <div className="relative">
-                <select
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  required
-                  className="w-full appearance-none px-4 py-3.5 rounded-xl bg-gray-50 dark:bg-white/3 border border-gray-200 dark:border-white/10 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-cobalt transition-all"
-                >
-                  <option value="" disabled>
-                    Select a topic...
-                  </option>
-                  <option value="order_issue">
-                    Issue with my active order
-                  </option>
-                  <option value="missing_item">
-                    Report a missing/damaged item
-                  </option>
-                  <option value="billing">
-                    Billing or Subscription question
-                  </option>
-                  <option value="other">Other inquiry</option>
-                </select>
-                {/* Custom dropdown arrow */}
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <svg
-                    width="12"
-                    height="8"
-                    viewBox="0 0 12 8"
-                    fill="none"
-                    className="text-gray-400"
-                  >
-                    <path
-                      d="M1 1.5L6 6.5L11 1.5"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-              </div>
+              <CustomSelect
+                value={subject}
+                onChange={setSubject}
+                options={[
+                  { value: "order_issue", label: "Issue with my active order" },
+                  { value: "missing_item", label: "Report a missing/damaged item" },
+                  { value: "billing", label: "Billing or Subscription question" },
+                  { value: "other", label: "Other inquiry" },
+                ]}
+                placeholder="Select a topic..."
+              />
             </div>
 
             {/* Message Area */}

@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, MoreHorizontal, Download, UserPlus, Star, Bike, CheckCircle, Clock, XCircle, X } from "lucide-react";
-import { mockAdminRiders } from "@/data/mock-admin";
+import { Search, Filter, Plus, MoreHorizontal, UserCheck, Star, Truck, UserPlus, CheckCircle, Clock, XCircle, X, Bike } from "lucide-react";
+import { mockAdminRiders, AdminRider } from "@/data/mock-admin";
+import { CustomSelect } from "@/components/ui/custom-select";
 import Link from "next/link";
 
 export default function AdminRiders() {
@@ -172,11 +173,15 @@ export default function AdminRiders() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1.5">Vehicle Type</label>
-                  <select value={inviteForm.vehicleType} onChange={(e) => setInviteForm({...inviteForm, vehicleType: e.target.value})} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-cobalt">
-                    <option>Motorcycle</option>
-                    <option>Mini-Van</option>
-                    <option>Bicycle</option>
-                  </select>
+                  <CustomSelect
+                    value={inviteForm.vehicleType}
+                    onChange={(val) => setInviteForm({...inviteForm, vehicleType: val})}
+                    options={[
+                      { value: "Motorcycle", label: "Motorcycle" },
+                      { value: "Mini-Van", label: "Mini-Van" },
+                      { value: "Bicycle", label: "Bicycle" }
+                    ]}
+                  />
                 </div>
               </div>
               <div className="p-5 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex gap-3">

@@ -5,6 +5,7 @@ import { ArrowLeft, Save, Eye, EyeOff } from "lucide-react";
 import { mockAdminServices } from "@/data/mock-admin";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 export default function EditService() {
   const params = useParams();
@@ -70,14 +71,14 @@ export default function EditService() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Category</label>
-                  <select 
+                  <CustomSelect
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as any)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1f2937] text-sm font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-cobalt transition-all"
-                  >
-                    <option value="Standard">Standard</option>
-                    <option value="Premium">Premium</option>
-                  </select>
+                    onChange={(val) => setCategory(val as any)}
+                    options={[
+                      { value: "Standard", label: "Standard" },
+                      { value: "Premium", label: "Premium" }
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Pricing Unit</label>

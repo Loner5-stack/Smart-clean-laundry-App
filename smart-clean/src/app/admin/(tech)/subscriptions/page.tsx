@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, CreditCard, LayoutTemplate, Plus, MoreHorizontal, Calendar, X, Eye, Ban } from "lucide-react";
 import { mockAdminSubscriptions } from "@/data/mock-admin";
 import { sharedSubscriptionPlans } from "@/data/mock-shared";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 export default function AdminSubscriptions() {
   const [activeTab, setActiveTab] = useState<"plans" | "subscribers">("plans");
@@ -223,11 +224,15 @@ export default function AdminSubscriptions() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1.5">Billing Cycle</label>
-                  <select defaultValue={editingPlan.cycle} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-cobalt">
-                    <option>Monthly</option>
-                    <option>Quarterly</option>
-                    <option>Yearly</option>
-                  </select>
+                  <CustomSelect
+                    value={editingPlan.cycle}
+                    onChange={(val) => setEditingPlan({...editingPlan, cycle: val})}
+                    options={[
+                      { value: "Monthly", label: "Monthly" },
+                      { value: "Quarterly", label: "Quarterly" },
+                      { value: "Yearly", label: "Yearly" }
+                    ]}
+                  />
                 </div>
               </div>
               <div className="p-5 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex gap-3">

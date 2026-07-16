@@ -5,7 +5,8 @@ import {
   PiHouseDuotone,
   PiTagDuotone,
   PiClipboardTextDuotone,
-  PiUserCirclePlusDuotone
+  PiUserCirclePlusDuotone,
+  PiSignOutDuotone
 } from "react-icons/pi";
 import { BrandLogo } from "@/components/brand-logo";
 import { mockUser } from "@/data/mock-dashboard";
@@ -27,8 +28,13 @@ const navGroups = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ user }: { user?: any }) {
   const pathname = usePathname();
+  
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return "U";
+    return name.substring(0, 2).toUpperCase();
+  };
   
   if (pathname.startsWith("/dashboard/orders/new") || pathname.startsWith("/dashboard/orders/confirmed")) {
     return null;
@@ -74,14 +80,20 @@ export function Sidebar() {
                           : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white"
                       }`}
                     >
-                      <Icon
-                        size={22}
-                        className={
-                          isActive
-                            ? "text-brand-cobalt"
-                            : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition-colors"
-                        }
-                      />
+                      {href === "/dashboard/account" && user?.image ? (
+                        <div className={`w-[22px] h-[22px] rounded-full overflow-hidden border-2 ${isActive ? 'border-brand-cobalt shadow-sm' : 'border-transparent'} transition-all`}>
+                          <img src={user.image} alt="Avatar" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <Icon
+                          size={22}
+                          className={
+                            isActive
+                              ? "text-brand-cobalt"
+                              : "text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-200 transition-colors"
+                          }
+                        />
+                      )}
                       {label}
                     </Link>
                   );
@@ -93,20 +105,36 @@ export function Sidebar() {
       </nav>
 
       {/* User Profile at Bottom */}
-      <div className="px-4 py-4 border-t border-gray-100 dark:border-white/5">
+      <div className="px-4 py-4 border-t border-gray-100 dark:border-white/5 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-brand-cobalt flex items-center justify-center shrink-0">
-            <span className="text-white text-xs font-bold">
-              {mockUser.avatarInitials}
-            </span>
+          <div className="w-9 h-9 rounded-full bg-brand-cobalt flex items-center justify-center shrink-0 overflow-hidden">
+            {user?.image ? (
+              <img src={user.image} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white text-xs font-bold">
+                {getInitials(user?.name)}
+              </span>
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-              {mockUser.name}
+              {user?.name || "Customer"}
             </p>
-            <p className="text-xs text-gray-400 truncate">{mockUser.role}</p>
+            <p className="text-xs text-gray-400 truncate capitalize">{user?.role?.toLowerCase() || "Customer"}</p>
           </div>
         </div>
+
+        {/* Desktop Log Out Button */}
+        <button
+          onClick={() => {
+            // @ts-ignore - signOut is imported below, but just in case it isn't dynamically
+            import("next-auth/react").then(({ signOut }) => signOut({ redirectTo: "/login" }));
+          }}
+          className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 font-semibold hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors"
+        >
+          <PiSignOutDuotone size={18} />
+          Log Out
+        </button>
       </div>
     </aside>
   );

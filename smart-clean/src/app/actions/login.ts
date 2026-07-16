@@ -3,6 +3,7 @@
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 export async function loginAction(formData: FormData) {
   try {
@@ -30,6 +31,7 @@ export async function loginAction(formData: FormData) {
       password,
       redirect: false // We will handle the redirect manually on the client
     });
+    
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
@@ -48,7 +50,14 @@ export async function loginAction(formData: FormData) {
           return { success: false, error: "Something went wrong." };
       }
     }
-    // Next.js redirect() throws a special error that we must re-throw
-    throw error;
+    
+    // If it's a redirect error, we MUST re-throw it so Next.js handles it
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    // Catch any other errors (like Prisma, Redis, etc) and send them to the UI
+    console.error("Login Action Error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "An unexpected server error occurred." };
   }
 }

@@ -1,18 +1,29 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Check, Sparkles, AlertCircle, Shirt, Truck, Clock } from "lucide-react";
+import { Check, Sparkles, AlertCircle, Shirt, Truck, Clock, ArrowLeft } from "lucide-react";
 import { sharedSubscriptionPlans } from "@/data/mock-shared";
 
 
 
 export default function SubscriptionsPage() {
   const [billing, setBilling] = useState<"monthly" | "quarterly">("monthly");
+  const router = useRouter();
 
   return (
     <div className="px-4 md:px-6 py-6 lg:py-10 max-w-6xl mx-auto pb-24 lg:pb-10">
+      {/* Back Button */}
+      <button 
+        onClick={() => router.back()}
+        className="mb-4 lg:absolute lg:top-10 lg:left-8 flex items-center justify-center w-12 h-12 rounded-full bg-white dark:bg-[#111827] shadow-md border border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-gray-600 dark:text-gray-300 active:scale-95"
+        aria-label="Go back"
+      >
+        <ArrowLeft size={24} />
+      </button>
+
       {/* Header */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-10 mt-2 lg:mt-0">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

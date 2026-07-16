@@ -140,8 +140,8 @@ export function SignupFormContent() {
   };
 
   const scrollClasses = isExpanded
-    ? "h-[75vh] lg:h-[60vh] touch-pan-y pr-4 pb-24 lg:pb-4"
-    : "h-[50vh] lg:h-[60vh] touch-pan-y pr-4 pb-8 lg:pb-4";
+    ? "h-[85vh] lg:h-[70vh] touch-pan-y pr-4 pb-24 lg:pb-0"
+    : "h-[65vh] lg:h-[70vh] touch-pan-y pr-4 pb-8 lg:pb-0";
 
   return (
     <motion.div
@@ -373,8 +373,8 @@ export function SignupFormContent() {
           />
         </div>
 
-        {/* Footer Link */}
-        <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6 font-medium">
+        {/* Existing User Prompt */}
+        <div className="pb-16 lg:pb-0 text-center text-sm text-gray-500 dark:text-gray-400 mt-6 font-medium">
           Already have an account?{" "}
           <Link
             href="/login"
@@ -382,7 +382,7 @@ export function SignupFormContent() {
           >
             Sign In
           </Link>
-        </p>
+        </div>
       </ScrollArea>
     </motion.div>
   );

@@ -17,18 +17,18 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning is REQUIRED here so Next.js doesn't throw an error when the theme changes the HTML
     <html lang="en" className="h-full overflow-hidden" suppressHydrationWarning>
-      <body className=" h-full overflow-hidden antialiased text-brand-obsidian dark:text-brand-paper bg-brand-paper dark:bg-brand-obsidian">
+      <body suppressHydrationWarning className=" h-full overflow-hidden antialiased text-brand-obsidian dark:text-brand-paper bg-brand-paper dark:bg-brand-obsidian">
         {/* THE ENGINE: Wrapping our entire app so it remembers light/dark mode */}
-        <SessionProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
-          >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <SessionProvider>
             {children}
-          </ThemeProvider>
-        </SessionProvider>
+          </SessionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

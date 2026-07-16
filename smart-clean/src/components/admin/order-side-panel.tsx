@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Clock, MapPin, Phone, Mail, User, Check, CreditCard, StickyNote, Activity, FileText, Download } from "lucide-react";
 import { AdminOrder, adminStatusColors, OrderStatus } from "@/data/mock-admin";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface OrderSidePanelProps {
   order: AdminOrder | null;
@@ -14,6 +15,12 @@ export function OrderSidePanel({ order, isOpen, onClose }: OrderSidePanelProps) 
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
+  
+  const [selectedStatus, setSelectedStatus] = useState(order?.status || "PENDING");
+  
+  useEffect(() => {
+    if (order) setSelectedStatus(order.status);
+  }, [order]);
 
   if (!order) return null;
 
@@ -67,17 +74,19 @@ export function OrderSidePanel({ order, isOpen, onClose }: OrderSidePanelProps) 
                   <Activity size={14} /> Update Order Status
                 </h3>
                 <div className="flex items-center gap-3">
-                  <select 
-                    className="flex-1 bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-cobalt transition-shadow"
-                    defaultValue={order.status}
-                  >
-                    <option value="PENDING">Pending</option>
-                    <option value="PICKUP_ASSIGNED">Pickup Assigned</option>
-                    <option value="AT_HUB">At Hub</option>
-                    <option value="IN_PRODUCTION">In Production</option>
-                    <option value="OUT_FOR_DELIVERY">Out For Delivery</option>
-                    <option value="COMPLETED">Completed</option>
-                  </select>
+                    <CustomSelect
+                      value={selectedStatus}
+                      onChange={(val) => setSelectedStatus(val as OrderStatus)}
+                      className="flex-1"
+                    options={[
+                      { value: "PENDING", label: "Pending" },
+                      { value: "PICKUP_ASSIGNED", label: "Pickup Assigned" },
+                      { value: "AT_HUB", label: "At Hub" },
+                      { value: "IN_PRODUCTION", label: "In Production" },
+                      { value: "OUT_FOR_DELIVERY", label: "Out For Delivery" },
+                      { value: "COMPLETED", label: "Completed" }
+                    ]}
+                  />
                   <button className="px-5 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all">
                     Update
                   </button>
