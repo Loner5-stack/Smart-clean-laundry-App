@@ -1,9 +1,10 @@
 "use client";
 import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock, Loader2 } from "lucide-react";
+import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock } from "lucide-react";
 import { FcGoogle } from "react-icons/fc";
 import Link from "next/link";
+import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { signupAction } from "@/app/actions/signup";
@@ -335,18 +336,17 @@ export function SignupFormContent() {
             </motion.div>
           )}
 
-          {/* Submit Action */}
           <div className="pt-4">
             <button
               type="submit"
               disabled={isPending}
-              className="relative overflow-hidden w-full p-4 text-white rounded-xl font-bold hover:shadow-[0_8px_30px_rgb(41,98,255,0.3)] hover:shadow-brand-cobalt/30 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-300 tracking-wide bg-linear-to-r from-brand-cobalt to-blue-500 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              className="flex items-center justify-center gap-2 relative overflow-hidden w-full p-4 text-white rounded-xl font-bold hover:shadow-[0_8px_30px_rgb(41,98,255,0.3)] hover:shadow-brand-cobalt/30 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-300 tracking-wide bg-linear-to-r from-brand-cobalt to-blue-500 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               {isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 size={18} className="animate-spin" />
-                  Creating Account...
-                </span>
+                <>
+                  <Spinner size={18} className="text-current" />
+                  Creating account...
+                </>
               ) : (
                 "Create Account"
               )}

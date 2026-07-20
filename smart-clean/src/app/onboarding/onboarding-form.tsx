@@ -1,7 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
-import { Phone, MapPin, Loader2, Sparkles } from "lucide-react";
+import { Phone, MapPin, Sparkles } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useAuthLayout } from "@/context/login-auth-layout-context";
@@ -177,13 +178,13 @@ export function OnboardingFormContent() {
             <button
               type="submit"
               disabled={isPending}
-              className="relative overflow-hidden w-full p-4 text-white rounded-xl font-bold hover:shadow-[0_8px_30px_rgb(41,98,255,0.3)] hover:shadow-brand-cobalt/30 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-300 tracking-wide bg-linear-to-r from-brand-cobalt to-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="flex items-center justify-center gap-2 relative overflow-hidden w-full p-4 text-white rounded-xl font-bold hover:shadow-[0_8px_30px_rgb(41,98,255,0.3)] hover:shadow-brand-cobalt/30 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-300 tracking-wide bg-linear-to-r from-brand-cobalt to-blue-500 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isPending ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 size={18} className="animate-spin" />
+                <>
+                  <Spinner size={18} className="text-current" />
                   Saving Profile...
-                </span>
+                </>
               ) : (
                 "Complete Profile"
               )}

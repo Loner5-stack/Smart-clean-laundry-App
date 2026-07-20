@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect, useTransition } from "react";
-import { Settings2, Bell, Shield, MapPin, Clock, Truck, ShieldAlert, LogOut, X, Loader2, Check, Star } from "lucide-react";
+import { Settings2, Bell, Shield, MapPin, Clock, Truck, ShieldAlert, LogOut, X, Check, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { updateTierThresholds } from "@/app/actions/tier";
-
+import { updateAdminPasscodeAction } from "@/app/actions/admin-security";
+import { Spinner } from "@/components/ui/spinner";
 export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
   const [activeTab, setActiveTab] = useState<"platform" | "notifications" | "security" | "loyalty">("platform");
   const [showZonesModal, setShowZonesModal] = useState(false);
@@ -12,6 +13,11 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
   const [showToast, setShowToast] = useState(false);
   const [tiersState, setTiersState] = useState(dbTiers);
   const [isPending, startTransition] = useTransition();
+
+  const [showPasscodeModal, setShowPasscodeModal] = useState(false);
+  const [isUpdatingPasscode, setIsUpdatingPasscode] = useState(false);
+  const [passcodeError, setPasscodeError] = useState("");
+  const [passcodeSuccess, setPasscodeSuccess] = useState(false);
 
   const handleTierChange = (id: string, field: string, value: number) => {
     setTiersState(prev => prev.map(t => t.id === id ? { ...t, [field]: value } : t));
@@ -36,6 +42,29 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     }, 800);
+  };
+
+  const handleUpdatePasscode = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsUpdatingPasscode(true);
+    setPasscodeError("");
+    setPasscodeSuccess(false);
+
+    const formData = new FormData(e.currentTarget);
+    const result = await updateAdminPasscodeAction(formData);
+
+    setIsUpdatingPasscode(false);
+
+    if (!result.success) {
+      setPasscodeError(result.error ?? "Failed to update passcode.");
+      return;
+    }
+
+    setPasscodeSuccess(true);
+    setTimeout(() => {
+      setShowPasscodeModal(false);
+      setPasscodeSuccess(false);
+    }, 2000);
   };
 
 
@@ -98,7 +127,7 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Base Delivery Fee (₦)</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Base Delivery Fee ($)</label>
                         <input 
                           type="number" 
                           defaultValue={1500}
@@ -107,7 +136,7 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Free Delivery Threshold (₦)</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Free Delivery Threshold ($)</label>
                         <input 
                           type="number" 
                           defaultValue={15000}
@@ -165,8 +194,8 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
                       disabled={isSaving}
                       className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 transition-all flex items-center gap-2 min-w-[140px] justify-center disabled:opacity-70"
                     >
-                      {isSaving ? (
-                        <><Loader2 size={16} className="animate-spin" /> Saving...</>
+                      {isPending ? (
+                        <><Spinner size={16} className="text-current" /> Saving...</>
                       ) : (
                         "Save Changes"
                       )}
@@ -228,7 +257,7 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
                       className="px-6 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 transition-all flex items-center gap-2 min-w-[140px] justify-center disabled:opacity-70"
                     >
                       {isSaving ? (
-                        <><Loader2 size={16} className="animate-spin" /> Saving...</>
+                        <><Spinner size={16} className="text-current" /> Saving...</>
                       ) : (
                         "Save Changes"
                       )}
@@ -284,9 +313,9 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
                     <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-white/[0.02] border border-gray-100 dark:border-white/5 rounded-2xl">
                       <div>
                         <p className="font-bold text-gray-900 dark:text-white text-sm">Admin Password</p>
-                        <p className="text-xs font-semibold text-gray-500 mt-0.5">Last changed 45 days ago</p>
+                        <p className="text-xs font-semibold text-gray-500 mt-0.5">Manage your system passcode</p>
                       </div>
-                      <button className="px-4 py-2 bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-white/10 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors shadow-sm">
+                      <button onClick={() => setShowPasscodeModal(true)} className="px-4 py-2 bg-white dark:bg-[#1f2937] border border-gray-200 dark:border-white/10 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors shadow-sm">
                         Update
                       </button>
                     </div>
@@ -365,6 +394,58 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
         )}
       </AnimatePresence>
 
+      {/* Passcode Modal */}
+      <AnimatePresence>
+        {showPasscodeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowPasscodeModal(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white dark:bg-[#111827] w-full max-w-md rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 overflow-hidden flex flex-col max-h-[80vh]">
+              <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-white/5 shrink-0">
+                <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                  <ShieldAlert size={18} className="text-brand-cobalt" /> Update Passcode
+                </h3>
+                <button onClick={() => setShowPasscodeModal(false)} className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                  <X size={16} />
+                </button>
+              </div>
+              <form onSubmit={handleUpdatePasscode}>
+                <div className="p-5 space-y-4">
+                  {passcodeError && (
+                    <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 text-sm font-medium rounded-xl">
+                      {passcodeError}
+                    </div>
+                  )}
+                  {passcodeSuccess && (
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium rounded-xl flex items-center gap-2">
+                      <Check size={16} /> Passcode updated successfully!
+                    </div>
+                  )}
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Current Passcode</label>
+                    <input type="password" name="currentPasscode" required className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/20 text-sm focus:outline-none focus:border-brand-cobalt" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300">New Passcode</label>
+                    <input type="password" name="newPasscode" required className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/20 text-sm focus:outline-none focus:border-brand-cobalt" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700 dark:text-gray-300">Confirm New Passcode</label>
+                    <input type="password" name="confirmPasscode" required className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/20 text-sm focus:outline-none focus:border-brand-cobalt" />
+                  </div>
+                </div>
+                <div className="p-5 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/[0.02] flex gap-3">
+                  <button type="button" onClick={() => setShowPasscodeModal(false)} className="flex-1 py-2.5 bg-gray-200 dark:bg-white/10 text-gray-900 dark:text-white font-bold rounded-xl text-sm hover:bg-gray-300 transition-all">Cancel</button>
+                  <button type="submit" disabled={isUpdatingPasscode} className="px-6 py-2.5 bg-brand-cobalt text-white text-sm font-bold rounded-xl hover:bg-brand-cobalt/90 transition-colors flex items-center gap-2">
+                    {isUpdatingPasscode ? <><Spinner size={16} className="text-current" /> Saving...</> : "Update"}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Logs Modal */}
       <AnimatePresence>
         {showLogsModal && (
@@ -392,7 +473,7 @@ export default function AdminSettingsClient({ dbTiers }: { dbTiers: any[] }) {
                     <tr>
                       <td className="p-4 text-gray-500 font-semibold">Today, 14:32</td>
                       <td className="p-4 font-bold text-gray-900 dark:text-white">Admin (You)</td>
-                      <td className="p-4 text-gray-600 dark:text-gray-300">Updated delivery fee to ₦1,500</td>
+                      <td className="p-4 text-gray-600 dark:text-gray-300">Updated delivery fee to $1,500</td>
                     </tr>
                     <tr>
                       <td className="p-4 text-gray-500 font-semibold">Today, 10:15</td>

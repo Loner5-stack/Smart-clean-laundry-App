@@ -273,9 +273,9 @@ export default function RiderProfile() {
                   </div>
                   <div className="bg-white dark:bg-[#111827] p-5 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Earnings</p>
-                    <p className="text-2xl font-black text-gray-900 dark:text-white mb-2">₦42k</p>
+                    <p className="text-2xl font-black text-gray-900 dark:text-white mb-2">$42k</p>
                     <div className="flex items-center gap-2 text-[10px] font-bold">
-                      <span className="text-gray-500 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded">Fleet Avg: ₦38k</span>
+                      <span className="text-gray-500 bg-gray-100 dark:bg-white/5 px-2 py-0.5 rounded">Fleet Avg: $38k</span>
                     </div>
                   </div>
                 </div>

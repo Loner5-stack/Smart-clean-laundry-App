@@ -38,11 +38,25 @@ export async function verifyAuth(
     return reply.status(401).send({ error: "Unauthorized" });
   }
 
-  // ── 2. Verify NextAuth JWT ─────────────────────────────────────────
+  // ── 2. Trust the BFF User Headers ─────────────────────────────────
+  const userId = request.headers["x-user-id"];
+  const userRole = request.headers["x-user-role"];
+
+  if (userId && userRole) {
+    // Next.js (BFF) has already authenticated the user and is passing the context
+    request.user = { 
+      id: userId as string, 
+      email: "", 
+      role: userRole as UserRole 
+    };
+    return;
+  }
+
+  // ── 3. Verify NextAuth JWT (Fallback) ─────────────────────────────
   try {
     await request.jwtVerify();
   } catch {
-    return reply.status(401).send({ error: "Invalid or expired token" });
+    return reply.status(401).send({ error: "Invalid or missing authentication headers" });
   }
 }
 

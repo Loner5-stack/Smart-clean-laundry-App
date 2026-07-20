@@ -142,6 +142,24 @@ model Service {
   description String
   isActive    Boolean @default(true)
   imagePath   String?
+  displayOrder Int    @default(0)
+  isPopular   Boolean @default(false)
+
+  garments    GarmentItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GarmentItem {
+  id        String  @id @default(cuid())
+  name      String
+  emoji     String
+  basePrice Decimal @db.Decimal(10, 2)
+  unit      String
+  isActive  Boolean @default(true)
+
+  services  Service[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

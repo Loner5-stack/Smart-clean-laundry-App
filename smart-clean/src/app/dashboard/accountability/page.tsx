@@ -24,7 +24,7 @@ export default async function AccountabilityPage() {
     <AccountabilityPageContent
       totalOrders={tierData.completedOrders}
       currentTierName={tierData.tierName}
-      nextTier={tierData.nextTier}
+      nextTier={tierData.nextTier || null}
       dbTiers={dbTiers}
     />
   );

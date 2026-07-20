@@ -3,8 +3,10 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, Sparkles } from "lucide-react";
-import { allServices, type Service } from "@/data/mock-dashboard";
+import { Plus, Sparkles, Image as ImageIcon } from "lucide-react";
+import { getServices } from "@/lib/api";
+import { AdminService } from "@/data/mock-admin";
+import { Spinner } from "@/components/ui/spinner";
 
 type FilterTab = "all" | "standard" | "premium";
 
@@ -19,7 +21,7 @@ const tabs: { label: string; value: FilterTab }[] = [
   { label: "Premium", value: "premium" },
 ];
 
-function ServiceCard({ service, index }: { service: Service; index: number }) {
+function ServiceCard({ service, index }: { service: AdminService; index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -30,16 +32,23 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
     >
       {/* Image */}
       <div className="relative w-full h-44 bg-gray-50 dark:bg-white/5 overflow-hidden">
-        <Image
-          src={service.imagePath}
-          alt={service.name}
-          fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
-        />
+        {service.imagePath ? (
+          <Image
+            src={service.imagePath}
+            alt={service.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 dark:bg-white/5 text-gray-400">
+            <ImageIcon size={32} className="mb-2 opacity-50" />
+            <span className="text-xs font-bold uppercase tracking-wider opacity-50">No Image</span>
+          </div>
+        )}
 
         {/* Premium badge */}
-        {service.category === "premium" && (
+        {service.category.toLowerCase() === "premium" && (
           <div className="absolute top-3 left-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500 text-white text-[10px] font-bold tracking-wide shadow-md">
             <Sparkles size={10} />
             Premium
@@ -87,11 +96,25 @@ function ServiceCard({ service, index }: { service: Service; index: number }) {
 export default function ServicesPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const tabsRef = useRef<HTMLDivElement>(null);
+  const [services, setServices] = useState<AdminService[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getServices()
+      .then((data) => {
+        setServices(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load services:", err);
+        setIsLoading(false);
+      });
+  }, []);
 
   const filtered =
     activeTab === "all"
-      ? allServices
-      : allServices.filter((s) => s.category === activeTab);
+      ? services
+      : services.filter((s) => s.category.toLowerCase() === activeTab);
 
   return (
     <div className="px-4 md:px-6 py-6 max-w-6xl mx-auto">
@@ -133,28 +156,27 @@ export default function ServicesPage() {
               }`}
             >
               {tab.value === "all"
-                ? allServices.length
-                : allServices.filter((s) => s.category === tab.value).length}
+                ? services.length
+                : services.filter((s) => s.category.toLowerCase() === tab.value).length}
             </span>
           </button>
         ))}
       </div>
 
-      {/* Service Cards Grid */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-          {filtered.map((service, i) => (
-            <ServiceCard key={service.id} service={service} index={i} />
-          ))}
-        </motion.div>
-      </AnimatePresence>
+      {/* Grid */}
+      {isLoading ? (
+        <div className="w-full flex items-center justify-center py-24">
+          <Spinner size={32} className="text-brand-cobalt" />
+        </div>
+      ) : (
+        <AnimatePresence mode="popLayout">
+          <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {filtered.map((service, idx) => (
+              <ServiceCard key={service.id} service={service} index={idx} />
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      )}
     </div>
   );
 }

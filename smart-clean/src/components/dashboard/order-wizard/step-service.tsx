@@ -7,7 +7,7 @@ import { allServices } from "@/data/mock-dashboard";
 import type { OrderState } from "@/types/order-wizard";
 
 function formatNaira(n: number) {
-  return `₦${n.toLocaleString("en-NG")}`;
+  return `$${n.toLocaleString("en-US")}`;
 }
 
 interface Props {

@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { LockKeyhole, Mail, Lock, ArrowRight, Loader2, Bike } from "lucide-react";
+import { LockKeyhole, Mail, Lock, ArrowRight, Bike } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function RiderLogin() {
@@ -109,7 +110,7 @@ export default function RiderLogin() {
                 className="w-full bg-brand-cobalt text-white hover:bg-brand-cobalt/90 rounded-xl py-4 font-bold text-sm transition-all flex items-center justify-center gap-2 mt-6 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 relative overflow-hidden group shadow-lg hover:-translate-y-1 hover:shadow-brand-cobalt/30"
               >
                 {isLoading ? (
-                  <Loader2 size={18} className="animate-spin" />
+                  <Spinner size={18} className="text-current" />
                 ) : (
                   <>
                     <span>Authenticate</span>

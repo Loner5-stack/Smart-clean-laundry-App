@@ -111,20 +111,19 @@ This feature defines the end-to-end experience for customers browsing, selecting
 - REQ-7.5: The checkout form and all other forms are navigable and completable using a keyboard alone, with visible focus indicators on all focusable elements.
 - REQ-7.6: The app does not rely solely on colour to convey meaning (e.g., order status stages also use icons or text labels in addition to colour coding); all status changes are also announced to screen readers via `aria-live` regions where content updates dynamically.
 
-
 ---
 
 ## Glossary
 
-| Term | Definition |
-|------|------------|
-| **Catalogue** | The browsable list of all available cleaning services, grouped by category. |
-| **Cart** | The temporary in-session collection of selected services and their customizations prior to checkout. |
-| **OrderStatus** | The Prisma enum tracking an order's lifecycle: `PENDING`, `PICKUP_ASSIGNED`, `AT_HUB`, `IN_PRODUCTION`, `OUT_FOR_DELIVERY`, `COMPLETED`. |
-| **Skeleton state** | Animated placeholder UI rendered while remote data is being fetched, mimicking the shape of the real content. |
-| **Empty state** | Illustrated screen shown when a list or catalogue returns zero results. |
-| **Starch level** | A garment-care preference indicating how much starch is applied during pressing: None, Light, or Heavy. |
-| **Turnaround time** | The estimated duration from pickup to delivery for a given service. |
-| **Touch target** | The total tappable/clickable area of an interactive element, required to be at minimum 44×44px. |
-| **WCAG 2.1 AA** | The Web Content Accessibility Guidelines level AA standard used as the accessibility baseline for this feature. |
-| **Bottom nav** | The fixed 4-tab navigation bar anchored to the bottom of the screen in the customer app. |
+| Term                | Definition                                                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Catalogue**       | The browsable list of all available cleaning services, grouped by category.                                                              |
+| **Cart**            | The temporary in-session collection of selected services and their customizations prior to checkout.                                     |
+| **OrderStatus**     | The Prisma enum tracking an order's lifecycle: `PENDING`, `PICKUP_ASSIGNED`, `AT_HUB`, `IN_PRODUCTION`, `OUT_FOR_DELIVERY`, `COMPLETED`. |
+| **Skeleton state**  | Animated placeholder UI rendered while remote data is being fetched, mimicking the shape of the real content.                            |
+| **Empty state**     | Illustrated screen shown when a list or catalogue returns zero results.                                                                  |
+| **Starch level**    | A garment-care preference indicating how much starch is applied during pressing: None, Light, or Heavy.                                  |
+| **Turnaround time** | The estimated duration from pickup to delivery for a given service.                                                                      |
+| **Touch target**    | The total tappable/clickable area of an interactive element, required to be at minimum 44×44px.                                          |
+| **WCAG 2.1 AA**     | The Web Content Accessibility Guidelines level AA standard used as the accessibility baseline for this feature.                          |
+| **Bottom nav**      | The fixed 4-tab navigation bar anchored to the bottom of the screen in the customer app.                                                 |

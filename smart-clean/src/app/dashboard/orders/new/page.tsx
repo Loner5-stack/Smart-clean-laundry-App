@@ -13,6 +13,7 @@ import { MobileCartDrawer } from "@/components/dashboard/order-wizard/mobile-car
 import { initialOrderState, type OrderState } from "@/types/order-wizard";
 import { allServices } from "@/data/mock-dashboard";
 import { timeSlots, PICKUP_FEE } from "@/data/order-wizard-data";
+import { placeOrder } from "@/lib/api";
 
 /** The wizard now has 4 logical steps. Step 2 (Items) has sub-steps driven by
  *  itemSelectionIndex so the user selects items for each service in turn. */
@@ -164,8 +165,8 @@ export default function NewOrderPage() {
       const totalMax = hasItems ? exactSubtotal + bagMax + PICKUP_FEE : 0;
       
       const totalStr = isEstimate
-        ? `₦${totalMin.toLocaleString("en-NG")} - ₦${totalMax.toLocaleString("en-NG")}`
-        : `₦${totalMin.toLocaleString("en-NG")}`;
+        ? `$${totalMin.toLocaleString("en-US")} - $${totalMax.toLocaleString("en-US")}`
+        : `$${totalMin.toLocaleString("en-US")}`;
       const dateLabel = order.pickupDate
         ? new Date(order.pickupDate + "T00:00:00").toLocaleDateString("en-NG", {
             weekday: "short",
@@ -182,8 +183,25 @@ export default function NewOrderPage() {
       params.set("total", totalStr);
       if (isEstimate) params.set("isEstimate", "true");
 
-      sessionStorage.removeItem("smart_clean_draft_order");
-      router.push(`/dashboard/orders/confirmed?${params.toString()}`);
+      placeOrder({
+        items: [...order.selectedItems, ...order.bagSelections],
+        pickupDetails: {
+          address: order.pickupAddress,
+          landmark: order.pickupLandmark,
+          date: order.pickupDate,
+          timeSlotId: order.pickupTimeSlotId,
+        },
+        totalAmount: totalMin, // the backend will re-calculate this securely
+        paymentMethod: order.paymentMethod,
+        isEstimate,
+      }).then((res) => {
+        console.log("Order placed successfully", res);
+        sessionStorage.removeItem("smart_clean_draft_order");
+        router.push(`/dashboard/orders/confirmed?${params.toString()}`);
+      }).catch(err => {
+        console.error(err);
+        alert("Failed to place order.");
+      });
       return;
     }
 
@@ -369,8 +387,8 @@ export default function NewOrderPage() {
               </span>
               <span className="text-sm font-extrabold text-brand-cobalt">
                 {isEstimate
-                  ? `₦${totalMin.toLocaleString("en-NG")} – ₦${totalMax.toLocaleString("en-NG")}`
-                  : `₦${totalMin.toLocaleString("en-NG")}`}
+                  ? `$${totalMin.toLocaleString("en-US")} – $${totalMax.toLocaleString("en-US")}`
+                  : `$${totalMin.toLocaleString("en-US")}`}
               </span>
             </div>
           );

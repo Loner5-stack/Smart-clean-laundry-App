@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { Spinner } from "@/components/ui/spinner";
 import {
   Package,
   MapPin,
@@ -148,13 +149,31 @@ function OrderCard({ order, index }: { order: Order; index: number }) {
   );
 }
 
+import { getOrderHistory } from "@/lib/api";
+
 export default function OrdersPage() {
   const [tab, setTab] = useState<Tab>("active");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const activeOrders = mockOrders.filter(
+  useEffect(() => {
+    async function loadOrders() {
+      try {
+        const data = await getOrderHistory();
+        setOrders(data);
+      } catch (error) {
+        console.error("Failed to load orders", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOrders();
+  }, []);
+
+  const activeOrders = orders.filter(
     (o) => o.status !== "COMPLETED" && o.status !== "CANCELLED",
   );
-  const pastOrders = mockOrders.filter(
+  const pastOrders = orders.filter(
     (o) => o.status === "COMPLETED" || o.status === "CANCELLED",
   );
 
@@ -203,7 +222,17 @@ export default function OrdersPage() {
       {/* Orders List */}
       <div className="space-y-4 relative min-h-[300px]">
         <AnimatePresence mode="wait">
-          {displayOrders.length === 0 ? (
+          {loading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 flex flex-col items-center justify-center p-6"
+            >
+              <Spinner size={40} />
+            </motion.div>
+          ) : displayOrders.length === 0 ? (
             <motion.div
               key="empty"
               initial={{ opacity: 0, scale: 0.95 }}

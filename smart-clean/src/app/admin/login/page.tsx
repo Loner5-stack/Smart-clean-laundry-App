@@ -1,24 +1,42 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { LockKeyhole, Mail, Lock, ArrowRight, Loader2, Database } from "lucide-react";
+import { LockKeyhole, Lock, ArrowRight, Database } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { adminLoginAction } from "@/app/actions/admin-login";
 
 export default function AdminLogin() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [isPending, startTransition] = useTransition();
+  const [passcode, setPasscode] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    // Simulate auth
-    setTimeout(() => {
-      document.cookie = "admin_token=mock_token; path=/;";
-      setIsLoading(false);
-      router.push("/admin");
-    }, 1500);
+    setError("");
+
+    if (!passcode) {
+      setError("Passcode is required.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("passcode", passcode);
+
+    startTransition(async () => {
+      const result = await adminLoginAction(formData);
+
+      if (!result?.success) {
+        setError(result?.error ?? "Invalid passcode. Access denied.");
+        setPasscode("");
+        return;
+      }
+
+      router.push("/admin/orders");
+      router.refresh();
+    });
   };
 
   return (
@@ -61,31 +79,11 @@ export default function AdminLogin() {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-5">
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider pl-1">
-                  Admin Email
-                </label>
-                <div className="relative group">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-cobalt transition-colors">
-                    <Mail size={18} />
-                  </div>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full py-3.5 pl-11 pr-4 rounded-xl bg-white/50 dark:bg-black/10 backdrop-blur-md border border-gray-200 dark:border-white/10 focus:border-brand-cobalt focus:ring-4 focus:ring-brand-cobalt/20 outline-none transition-all duration-300 text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-gray-600 shadow-sm"
-                    placeholder="admin@smartclean.com"
-                  />
-                </div>
-              </div>
-
-              {/* Password */}
+              {/* Passcode */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between pl-1 pr-1">
                   <label className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                    Master Password
+                    Master Passcode
                   </label>
                 </div>
                 <div className="relative group">
@@ -95,21 +93,32 @@ export default function AdminLogin() {
                   <input
                     type="password"
                     required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    value={passcode}
+                    onChange={(e) => setPasscode(e.target.value)}
                     className="w-full py-3.5 pl-11 pr-4 rounded-xl bg-white/50 dark:bg-black/10 backdrop-blur-md border border-gray-200 dark:border-white/10 focus:border-brand-cobalt focus:ring-4 focus:ring-brand-cobalt/20 outline-none transition-all duration-300 text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-gray-600 shadow-sm"
-                    placeholder="••••••••"
+                    placeholder="Enter system passcode"
+                    autoFocus
                   />
                 </div>
               </div>
 
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-red-500 dark:text-red-400 text-xs font-bold text-center"
+                >
+                  {error}
+                </motion.p>
+              )}
+
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isPending || !passcode}
                 className="w-full bg-brand-cobalt text-white hover:bg-brand-cobalt/90 rounded-xl py-4 font-bold text-sm transition-all flex items-center justify-center gap-2 mt-6 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 relative overflow-hidden group shadow-lg hover:-translate-y-1 hover:shadow-brand-cobalt/30"
               >
-                {isLoading ? (
-                  <Loader2 size={18} className="animate-spin" />
+                {isPending ? (
+                  <Spinner size={18} className="text-current" />
                 ) : (
                   <>
                     <span>Authenticate</span>
@@ -117,7 +126,7 @@ export default function AdminLogin() {
                   </>
                 )}
                 {/* Shine effect */}
-                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-linear-to-r from-transparent via-white/20 dark:via-black/10 to-transparent skew-x-12" />
+                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 dark:via-black/10 to-transparent skew-x-12" />
               </button>
             </form>
           </div>

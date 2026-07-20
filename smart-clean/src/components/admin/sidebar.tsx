@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -16,6 +17,7 @@ import {
   Repeat
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { adminLogoutAction } from "@/app/actions/admin-logout";
 
 const NAV_SECTIONS = [
   {
@@ -92,16 +94,22 @@ export function AdminSidebar() {
           </div>
         </Link>
 
-        <button 
-          onClick={() => {
-            document.cookie = "admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            window.location.href = "/admin/login";
+        <form 
+          action={adminLogoutAction} 
+          className="w-full"
+          onSubmit={() => {
+            // Emit a storage event so other tabs immediately detect the logout
+            localStorage.setItem("sc_admin_logout", Date.now().toString());
           }}
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
-          <LogOut size={18} className="text-gray-400" />
-          Log Out
-        </button>
+          <button 
+            type="submit"
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <LogOut size={18} className="text-gray-400" />
+            Log Out
+          </button>
+        </form>
       </div>
     </aside>
   );

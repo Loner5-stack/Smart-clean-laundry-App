@@ -8,6 +8,7 @@ import { healthRoutes } from "./routes/health";
 import { orderRoutes } from "./routes/orders";
 import { riderRoutes } from "./routes/rider";
 import { adminRoutes } from "./routes/admin";
+import { catalogRoutes } from "./routes/catalog";
 
 const server = Fastify({
   logger: {
@@ -28,12 +29,12 @@ async function start() {
   });
 
   // ── JWT ──────────────────────────────────────────────────────────────
-  // Must match the NEXTAUTH_SECRET used to sign tokens on the frontend.
-  if (!process.env.NEXTAUTH_SECRET) {
-    throw new Error("NEXTAUTH_SECRET environment variable is required");
+  // Must match the AUTH_SECRET used to sign tokens on the frontend.
+  if (!process.env.AUTH_SECRET) {
+    throw new Error("AUTH_SECRET environment variable is required");
   }
   await server.register(fastifyJwt, {
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.AUTH_SECRET,
   });
 
   // ── Prisma ───────────────────────────────────────────────────────────
@@ -44,6 +45,7 @@ async function start() {
   await server.register(orderRoutes);
   await server.register(riderRoutes);
   await server.register(adminRoutes);
+  await server.register(catalogRoutes);
 
   // ── Start ─────────────────────────────────────────────────────────────
   const port = parseInt(process.env.PORT ?? "3001", 10);

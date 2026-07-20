@@ -77,7 +77,7 @@ export function TopHeader() {
                                 {service.name}
                               </p>
                               <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                From ₦{service.price.toLocaleString()}
+                                From ${service.price.toLocaleString()}
                               </p>
                             </div>
                           </button>

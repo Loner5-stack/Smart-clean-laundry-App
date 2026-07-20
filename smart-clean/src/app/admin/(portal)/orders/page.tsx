@@ -2,7 +2,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Filter, MoreHorizontal, Check, Clock, UserPlus, ChevronDown, ListFilter, Download } from "lucide-react";
-import { mockAdminOrders, adminStatusColors, OrderStatus, AdminOrder } from "@/data/mock-admin";
+import { adminStatusColors, OrderStatus, AdminOrder } from "@/data/mock-admin";
+import { getOrders } from "@/lib/api";
 import { OrderSidePanel } from "@/components/admin/order-side-panel";
 
 function CustomDropdown({
@@ -96,44 +97,36 @@ export default function AdminOrders() {
   const [dateFilter, setDateFilter] = useState("All Time");
   const [unassignedOnly, setUnassignedOnly] = useState(false);
   const [todayOnly, setTodayOnly] = useState(false);
+  
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
+
   const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [selectedOrderForPanel, setSelectedOrderForPanel] = useState<AdminOrder | null>(null);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredOrders = mockAdminOrders.filter(order => {
-    const matchesSearch = order.id.toLowerCase().includes(search.toLowerCase()) || 
-                          order.customerName.toLowerCase().includes(search.toLowerCase()) ||
-                          order.customerPhone.includes(search);
-    const matchesStatus = statusFilter === "All Statuses" ? true : order.status.replace("_", " ") === statusFilter;
-    const matchesUnassigned = unassignedOnly ? !order.rider : true;
-    const matchesToday = todayOnly ? new Date(order.pickupDate).toDateString() === new Date().toDateString() : true;
-    
-    const matchesDateFilter = () => {
-      if (dateFilter === "All Time") return true;
-      const orderDate = new Date(order.placedAt);
-      const today = new Date();
-      if (dateFilter === "Today") {
-        return orderDate.toDateString() === today.toDateString();
-      }
-      if (dateFilter === "Yesterday") {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        return orderDate.toDateString() === yesterday.toDateString();
-      }
-      if (dateFilter === "Last 7 Days") {
-        const last7 = new Date();
-        last7.setDate(last7.getDate() - 7);
-        return orderDate >= last7;
-      }
-      if (dateFilter === "Last 30 Days") {
-        const last30 = new Date();
-        last30.setDate(last30.getDate() - 30);
-        return orderDate >= last30;
-      }
-      return true;
-    };
-    
-    return matchesSearch && matchesStatus && matchesUnassigned && matchesToday && matchesDateFilter();
-  });
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setIsLoading(true);
+      getOrders(page, limit, search, statusFilter, dateFilter, unassignedOnly, todayOnly)
+        .then(res => {
+          setOrders(res.data);
+          setTotalPages(res.meta.totalPages);
+          setTotalOrders(res.meta.total);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsLoading(false);
+        });
+    }, 400); // 400ms debounce
+    return () => clearTimeout(handler);
+  }, [page, limit, search, statusFilter, dateFilter, unassignedOnly, todayOnly]);
+
+  const filteredOrders = orders; // Filtering is now done server-side
 
   const toggleSelectAll = () => {
     if (selectedOrders.size === filteredOrders.length && filteredOrders.length > 0) {
@@ -261,7 +254,11 @@ export default function AdminOrders() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-              {filteredOrders.length === 0 ? (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="p-8 text-center text-gray-500 font-bold">Loading orders...</td>
+                </tr>
+              ) : filteredOrders.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="p-8 text-center text-gray-500 font-bold">No orders match the current filters.</td>
                 </tr>
@@ -339,6 +336,32 @@ export default function AdminOrders() {
               ))}
             </tbody>
           </table>
+        </div>
+        
+        {/* Pagination Controls */}
+        <div className="p-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+          <div className="text-sm font-semibold text-gray-500">
+            Showing {filteredOrders.length > 0 ? ((page - 1) * limit) + 1 : 0} to {((page - 1) * limit) + filteredOrders.length} of {totalOrders} orders
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1 || isLoading}
+              className="px-4 py-2 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <span className="text-sm font-bold text-gray-900 dark:text-white px-2">
+              Page {page} of {totalPages}
+            </span>
+            <button 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || isLoading}
+              className="px-4 py-2 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 

@@ -34,8 +34,14 @@ export function AccountPageContent({
   const router = useRouter();
 
   const handleLogout = async () => {
-    // Let NextAuth securely destroy the session cookie and redirect
-    await signOut({ redirectTo: "/login" });
+    // 1. Destroy the session cookie first WITHOUT redirecting
+    await signOut({ redirect: false });
+    
+    // 2. NOW that the cookie is gone, tell other tabs to log out
+    localStorage.setItem("sc_user_logout", Date.now().toString());
+    
+    // 3. Finally, redirect this tab
+    window.location.href = "/login";
   };
 
   const getInitials = (name: string | null) => {

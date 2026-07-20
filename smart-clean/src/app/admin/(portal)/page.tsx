@@ -1,7 +1,9 @@
 "use client";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { TrendingUp, ShoppingBag, Bike, AlertTriangle, Clock, ArrowUpRight, ArrowDownRight, Activity, Users } from "lucide-react";
-import { mockAdminOrders, adminStatusColors, OrderStatus } from "@/data/mock-admin";
+import { adminStatusColors, OrderStatus, AdminOrder } from "@/data/mock-admin";
+import { getOrders } from "@/lib/api";
 import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, YAxis, Cell } from "recharts";
 import Link from "next/link";
 
@@ -32,7 +34,20 @@ export default function AdminDashboard() {
   const totalRiders = 6;
   const needsActionCount = 2; // Mock stuck orders
 
-  const getStageOrders = (status: OrderStatus) => mockAdminOrders.filter(o => o.status === status);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getOrders().then(res => {
+      setOrders(res.data);
+      setIsLoading(false);
+    }).catch(err => {
+      console.error(err);
+      setIsLoading(false);
+    });
+  }, []);
+
+  const getStageOrders = (status: OrderStatus) => orders.filter(o => o.status === status);
 
   return (
     <div className="space-y-8">
@@ -63,7 +78,7 @@ export default function AdminDashboard() {
             </div>
           </div>
           <h3 className="text-gray-400 text-xs font-bold uppercase tracking-wider mb-1">Revenue Today</h3>
-          <p className="text-2xl font-black text-gray-900 dark:text-white">₦{todayRevenue.toLocaleString()}</p>
+          <p className="text-2xl font-black text-gray-900 dark:text-white">${todayRevenue.toLocaleString()}</p>
         </motion.div>
 
         {/* Card 3: Active Riders */}
@@ -130,11 +145,15 @@ export default function AdminDashboard() {
                       <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{order.customerName}</p>
                     </Link>
                   ))}
-                  {stageOrders.length === 0 && (
+                  {isLoading ? (
+                    <div className="py-4 text-center border-2 border-dashed border-gray-200 dark:border-white/5 rounded-xl">
+                      <p className="text-xs font-bold text-gray-400">Loading...</p>
+                    </div>
+                  ) : stageOrders.length === 0 ? (
                     <div className="py-4 text-center border-2 border-dashed border-gray-200 dark:border-white/5 rounded-xl">
                       <p className="text-xs font-bold text-gray-400">Empty</p>
                     </div>
-                  )}
+                  ) : null}
                   {stageOrders.length > 3 && (
                     <Link href={`/admin/orders?status=${stage.id}`} className="block text-center text-xs font-bold text-brand-cobalt hover:underline mt-2">
                       View all {stageOrders.length}
@@ -204,7 +223,7 @@ export default function AdminDashboard() {
         {/* Right: Revenue Chart (40%) */}
         <div className="lg:col-span-2 bg-white dark:bg-[#111827] rounded-3xl p-6 border border-gray-100 dark:border-white/5 shadow-sm flex flex-col h-[400px]">
           <h2 className="text-lg font-black text-gray-900 dark:text-white mb-2">Revenue (7 Days)</h2>
-          <p className="text-sm font-semibold text-gray-500 mb-6">This week: <span className="text-gray-900 dark:text-white font-bold">₦409,000</span> across 113 orders</p>
+          <p className="text-sm font-semibold text-gray-500 mb-6">This week: <span className="text-gray-900 dark:text-white font-bold">$409,000</span> across 113 orders</p>
           
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
@@ -220,7 +239,7 @@ export default function AdminDashboard() {
                   axisLine={false} 
                   tickLine={false} 
                   tick={{ fontSize: 10, fill: '#9CA3AF', fontWeight: 700 }}
-                  tickFormatter={(val) => `₦${val/1000}k`}
+                  tickFormatter={(val) => `$${val/1000}k`}
                 />
                 <Tooltip 
                   cursor={{ fill: 'rgba(42, 98, 255, 0.05)' }}
@@ -228,7 +247,7 @@ export default function AdminDashboard() {
                     if (active && payload && payload.length) {
                       return (
                         <div className="bg-gray-900 text-white text-xs font-bold py-2 px-3 rounded-lg shadow-xl">
-                          <p>₦{payload[0].value?.toLocaleString()}</p>
+                          <p>${payload[0].value?.toLocaleString()}</p>
                           <p className="text-gray-400 font-semibold text-[10px] mt-0.5">{payload[0].payload.orders} orders</p>
                         </div>
                       );

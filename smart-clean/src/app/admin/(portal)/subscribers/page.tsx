@@ -111,7 +111,7 @@ export default function OperationalSubscribersPage() {
                   <td className="p-4">
                     <div className="flex items-center gap-2 mb-1">
                       <CreditCard size={14} className="text-gray-400" />
-                      <span className="font-bold text-gray-900 dark:text-white text-sm">₦{sub.amount.toLocaleString()}</span>
+                      <span className="font-bold text-gray-900 dark:text-white text-sm">${sub.amount.toLocaleString()}</span>
                     </div>
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
                       sub.status === "Active" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" :

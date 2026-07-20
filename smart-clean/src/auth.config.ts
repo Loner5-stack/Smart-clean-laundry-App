@@ -9,6 +9,15 @@ export const authConfig = {
   },
   session: { strategy: "jwt" },
   callbacks: {
+    async signIn({ user }) {
+      // Restrict NextAuth strictly to customers
+      // user.role comes from the database via Prisma adapter
+      // @ts-expect-error
+      if (user.role && user.role !== "CUSTOMER") {
+        return false;
+      }
+      return true;
+    },
     async jwt({ token, user, trigger, session }) {
       // If a user just logged in
       if (user) {

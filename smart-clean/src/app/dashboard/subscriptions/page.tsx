@@ -100,7 +100,7 @@ export default function SubscriptionsPage() {
                 </h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-gray-900 dark:text-white">
-                    ₦{price.toLocaleString("en-NG")}
+                    ${price.toLocaleString("en-US")}
                   </span>
                   <span className="text-sm font-medium text-gray-500">
                     /{billing === "monthly" ? "mo" : "qtr"}

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -10,11 +10,37 @@ import {
   Star,
   Users,
 } from "lucide-react";
-import { mockAdminCustomers, AdminCustomer } from "@/data/mock-admin";
+import { AdminCustomer } from "@/data/mock-admin";
+import { getCustomers } from "@/lib/api";
 import Link from "next/link";
 
 export default function AdminCustomers() {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+
+  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setIsLoading(true);
+      getCustomers(page, limit, search)
+        .then(res => {
+          setCustomers(res.data);
+          setTotalPages(res.meta.totalPages);
+          setTotalCustomers(res.meta.total);
+          setIsLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setIsLoading(false);
+        });
+    }, 400); // 400ms debounce
+    return () => clearTimeout(handler);
+  }, [page, limit, search]);
 
   return (
     <div className="space-y-6">
@@ -52,7 +78,7 @@ export default function AdminCustomers() {
             Total Customers
           </h3>
           <p className="text-2xl font-black text-gray-900 dark:text-white">
-            {mockAdminCustomers.length}
+            {customers.length}
           </p>
         </motion.div>
       </div>
@@ -95,7 +121,15 @@ export default function AdminCustomers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-              {mockAdminCustomers.map((customer, i) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-gray-500 font-bold">Loading customers...</td>
+                </tr>
+              ) : customers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-gray-500 font-bold">No customers found.</td>
+                </tr>
+              ) : customers.map((customer, i) => (
                 <motion.tr
                   key={customer.id}
                   initial={{ opacity: 0, y: 10 }}
@@ -167,6 +201,32 @@ export default function AdminCustomers() {
               ))}
             </tbody>
           </table>
+        </div>
+        
+        {/* Pagination Controls */}
+        <div className="p-4 border-t border-gray-100 dark:border-white/5 flex items-center justify-between">
+          <div className="text-sm font-semibold text-gray-500">
+            Showing {customers.length > 0 ? ((page - 1) * limit) + 1 : 0} to {((page - 1) * limit) + customers.length} of {totalCustomers} customers
+          </div>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1 || isLoading}
+              className="px-4 py-2 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <span className="text-sm font-bold text-gray-900 dark:text-white px-2">
+              Page {page} of {totalPages}
+            </span>
+            <button 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || isLoading}
+              className="px-4 py-2 bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>

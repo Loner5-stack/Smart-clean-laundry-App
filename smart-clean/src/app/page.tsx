@@ -35,7 +35,7 @@ export default function WelcomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const slides = SLIDES;
   const router = useRouter();
-  const { status } = useSession();
+  const { data, status } = useSession();
 
   const [splashExiting, setSplashExiting] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
@@ -98,7 +98,7 @@ export default function WelcomePage() {
             className="flex items-center gap-4"
           >
             <ThemeToggle />
-            {status === "authenticated" ? (
+            {status === "authenticated" && (data?.user as any)?.role === "CUSTOMER" ? (
               <Link
                 href="/dashboard"
                 className="hidden lg:inline-flex px-5 py-2.5 rounded-full bg-white dark:bg-white/10 text-gray-900 dark:text-white text-sm font-bold shadow-sm hover:shadow-md transition-all border border-gray-200 dark:border-white/10"
@@ -171,7 +171,7 @@ export default function WelcomePage() {
             </motion.div>
 
             <motion.div variants={itemVariants} className="w-full sm:w-auto flex flex-col items-center gap-4 mt-4 lg:mt-8">
-              {status === "authenticated" ? (
+              {status === "authenticated" && (data?.user as any)?.role === "CUSTOMER" ? (
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center justify-center gap-3 w-full px-10 py-5 rounded-full bg-brand-cobalt text-white text-lg font-bold shadow-xl shadow-brand-cobalt/30 hover:scale-105 active:scale-95 transition-all duration-300"

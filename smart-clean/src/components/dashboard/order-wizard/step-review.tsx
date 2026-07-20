@@ -10,7 +10,7 @@ interface Props {
 }
 
 function formatNaira(n: number) {
-  return `₦${n.toLocaleString("en-NG")}`;
+  return `$${n.toLocaleString("en-US")}`;
 }
 
 function Row({ label, value }: { label: string; value: string }) {

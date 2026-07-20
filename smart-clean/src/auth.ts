@@ -14,6 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
       clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       name: "credentials",
@@ -32,6 +33,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!user) {
           throw new Error("Account with this email does not exist.");
+        }
+
+        if (user.role !== "CUSTOMER") {
+          throw new Error("This login portal is restricted to customers only. Please use the appropriate staff portal.");
         }
 
         if (!user.password) {

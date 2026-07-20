@@ -74,7 +74,7 @@ export default function CustomerProfile() {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Spend</p>
-                  <p className="text-xl font-black text-brand-cobalt">₦{customer.totalSpend > 0 ? (customer.totalSpend / 1000) + 'k' : '0'}</p>
+                  <p className="text-xl font-black text-brand-cobalt">${customer.totalSpend > 0 ? (customer.totalSpend / 1000) + 'k' : '0'}</p>
                 </div>
               </div>
             </div>
@@ -130,7 +130,7 @@ export default function CustomerProfile() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="font-black text-gray-900 dark:text-white text-sm">₦{order.totalAmount.toLocaleString()}</p>
+                            <p className="font-black text-gray-900 dark:text-white text-sm">${order.totalAmount.toLocaleString()}</p>
                             <span className="text-[10px] font-bold text-gray-500">{order.status}</span>
                           </div>
                         </div>

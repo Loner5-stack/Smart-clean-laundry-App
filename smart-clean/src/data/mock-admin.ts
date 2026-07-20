@@ -61,6 +61,9 @@ export interface AdminService {
   description: string;
   isActive: boolean;
   orderCount: number;
+  imagePath?: string | null;
+  displayOrder?: number;
+  isPopular?: boolean;
 }
 
 export interface AdminSubscription {

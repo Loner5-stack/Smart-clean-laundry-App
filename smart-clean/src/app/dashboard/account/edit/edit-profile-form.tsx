@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Mail, MapPin, Phone, User, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Mail, MapPin, Phone, User, Save } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { useState, useTransition } from "react";
 import { updateProfileAction } from "@/app/actions/profile";
 import { useRouter } from "next/navigation";
@@ -245,7 +246,7 @@ export function EditProfileForm({
             disabled={isPending}
             className="flex-[2] py-4 flex items-center justify-center gap-2 bg-brand-cobalt hover:bg-brand-cobalt/90 text-white font-bold rounded-2xl transition-all shadow-md hover:shadow-lg disabled:opacity-70"
           >
-            {isPending ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            {isPending ? <Spinner size={18} className="text-current" /> : <Save size={18} />}
             {isPending ? "Saving..." : "Save Changes"}
           </button>
         </div>

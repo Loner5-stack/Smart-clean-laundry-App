@@ -30,7 +30,7 @@ const navGroups = [
 
 export function Sidebar({ user }: { user?: any }) {
   const pathname = usePathname();
-  
+
   const getInitials = (name: string | null | undefined) => {
     if (!name) return "U";
     return name.substring(0, 2).toUpperCase();
@@ -126,9 +126,18 @@ export function Sidebar({ user }: { user?: any }) {
 
         {/* Desktop Log Out Button */}
         <button
-          onClick={() => {
-            // @ts-ignore - signOut is imported below, but just in case it isn't dynamically
-            import("next-auth/react").then(({ signOut }) => signOut({ redirectTo: "/login" }));
+          onClick={async () => {
+            // Dynamically import signOut
+            const { signOut } = await import("next-auth/react");
+            
+            // 1. Destroy the session cookie first WITHOUT redirecting
+            await signOut({ redirect: false });
+            
+            // 2. NOW that the cookie is gone, tell other tabs to log out
+            localStorage.setItem("sc_user_logout", Date.now().toString());
+            
+            // 3. Finally, redirect this tab
+            window.location.href = "/login";
           }}
           className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 font-semibold hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors"
         >

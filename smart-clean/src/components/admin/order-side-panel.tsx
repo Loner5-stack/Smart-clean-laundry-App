@@ -188,7 +188,7 @@ export function OrderSidePanel({ order, isOpen, onClose }: OrderSidePanelProps) 
                                 )}
                               </span>
                               {item.price && (
-                                <p className="text-xs font-semibold text-gray-500">₦{(item.price * item.quantity).toLocaleString()}</p>
+                                <p className="text-xs font-semibold text-gray-500">${(item.price * item.quantity).toLocaleString()}</p>
                               )}
                             </div>
                           </div>
@@ -224,7 +224,7 @@ export function OrderSidePanel({ order, isOpen, onClose }: OrderSidePanelProps) 
                   <div className="flex items-center gap-3">
                     <CreditCard size={18} className="text-gray-400" />
                     <div>
-                      <p className="font-black text-lg text-gray-900 dark:text-white">₦{order.totalAmount.toLocaleString()}</p>
+                      <p className="font-black text-lg text-gray-900 dark:text-white">${order.totalAmount.toLocaleString()}</p>
                       <p className="text-xs font-semibold text-gray-500">{order.paymentMethod}</p>
                     </div>
                   </div>
@@ -319,9 +319,9 @@ export function OrderSidePanel({ order, isOpen, onClose }: OrderSidePanelProps) 
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowRefundModal(false)} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
                 <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="relative bg-white dark:bg-[#111827] w-full max-w-sm rounded-2xl shadow-xl border border-gray-100 dark:border-white/10 p-6">
                   <h3 className="text-lg font-black text-gray-900 dark:text-white mb-2">Issue Refund</h3>
-                  <p className="text-sm font-semibold text-gray-500 mb-4">Order total is ₦{order.totalAmount.toLocaleString()}. How much would you like to refund?</p>
+                  <p className="text-sm font-semibold text-gray-500 mb-4">Order total is ${order.totalAmount.toLocaleString()}. How much would you like to refund?</p>
                   <div className="relative mb-4">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">₦</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
                     <input 
                       type="number" 
                       value={refundAmount}

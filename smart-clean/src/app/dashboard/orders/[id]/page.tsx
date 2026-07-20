@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, use } from "react";
 import { motion } from "framer-motion";
+import { Spinner } from "@/components/ui/spinner";
 import { 
   ChevronLeft, 
   MapPin, 
@@ -31,42 +32,62 @@ function getStageStatus(
 
 // Stage descriptions are now handled by ORDER_STATUS_MAP
 
+import { getCustomerOrderById } from "@/lib/api";
+
 export default function OrderTrackingPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const orderId = resolvedParams.id;
   
-  // Find the base order from the list
-  const baseOrder = mockOrders.find(o => o.id === orderId.replace('SC-', '#'));
-  
-  // If not found, or not active, show the 404 state
-  if (!baseOrder || baseOrder.status === "COMPLETED" || baseOrder.status === "CANCELLED") {
+  const [order, setOrder] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadOrder() {
+      try {
+        const data = await getCustomerOrderById(orderId);
+        setOrder(data);
+      } catch (err) {
+        console.error("Failed to fetch order", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadOrder();
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+        <Spinner size={40} />
+        <p className="text-gray-500 font-medium">Loading order details...</p>
+      </div>
+    );
+  }
+
+  if (!order || order.status === "COMPLETED" || order.status === "CANCELLED") {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
         <Package size={48} className="text-gray-300 dark:text-gray-600" />
         <p className="text-gray-500 font-medium">Order not found or already delivered.</p>
-        <Link href="/dashboard" className="text-brand-cobalt font-bold text-sm">
-          Return to Dashboard
+        <Link href="/dashboard/orders" className="text-brand-cobalt font-bold text-sm">
+          Return to Orders
         </Link>
       </div>
     );
   }
 
-  // For the prototype, combine the base order with the mock tracking data
-  const order = {
-    ...mockActiveOrder,
-    orderId: baseOrder.id.replace('#', 'SC-'),
-    service: baseOrder.service,
-  };
+  // Format the ETA from deliveryDate
+  const etaDate = new Date(order.deliveryDate);
+  const formattedEta = etaDate.toLocaleDateString("en-NG", { weekday: 'short', month: 'short', day: 'numeric' }) 
+                       + " \u2022 " 
+                       + etaDate.toLocaleTimeString("en-NG", { hour: 'numeric', minute: '2-digit' });
 
-  // Mock items for the summary
-  const mockItems = [
-    { ...garmentItems[0], quantity: 3 }, // Shirts
-    { ...garmentItems[2], quantity: 2 }, // Trousers
-    { ...garmentItems[3], quantity: 1 }, // Suit
+  // Fallback items if none provided
+  const items = (order.items && order.items.length > 0) ? order.items : [
+    { name: "Standard Bag", quantity: order.itemCount || 1, basePrice: 0 }
   ];
   
-  const subtotal = mockItems.reduce((acc, item) => acc + (item.basePrice * item.quantity), 0);
-  const total = subtotal + PICKUP_FEE;
+  const total = order.totalAmount;
 
   return (
     <div className="max-w-2xl mx-auto px-4 md:px-6 py-6 pb-24 lg:pb-6">
@@ -124,7 +145,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
           ) : (
             <div className="flex items-center gap-3 pt-4 border-t border-white/20">
               <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                <Loader2 size={18} className="text-white/50 animate-spin" />
+                <Spinner size={18} className="text-white/50" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm text-white/80 truncate">Pending Assignment</p>
@@ -150,7 +171,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
             <div className="absolute left-[11px] top-2 bottom-6 w-[2px] bg-gray-100 dark:bg-white/10 z-0" />
             
             {trackingStages.map((stage, i) => {
-              const status = getStageStatus(stage, order.currentStage || "PENDING");
+              const status = getStageStatus(stage, (order.status as TrackingStage) || "PENDING");
               const isLast = i === trackingStages.length - 1;
               
               return (
@@ -164,7 +185,7 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
                         <div className="relative">
                           <span className="absolute inset-0 rounded-full bg-brand-cobalt/30 animate-ping" />
                           <div className="w-6 h-6 rounded-full bg-brand-cobalt flex items-center justify-center relative z-10">
-                            <Loader2 size={12} className="text-white animate-spin" />
+                            <Spinner size={12} className="text-white" />
                           </div>
                         </div>
                       ) : (
@@ -220,13 +241,13 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
           </div>
           
           <div className="space-y-3 mb-4">
-            {mockItems.map(item => (
-              <div key={item.id} className="flex justify-between items-start">
+            {items.map((item: any, idx: number) => (
+              <div key={idx} className="flex justify-between items-start">
                 <span className="text-xs text-gray-600 dark:text-gray-400">
-                  {item.emoji} {item.quantity}× {item.name}
+                  {item.quantity || 1}× {item.name || "Laundry Item"}
                 </span>
                 <span className="text-xs font-semibold text-gray-900 dark:text-white">
-                  ₦{(item.basePrice * item.quantity).toLocaleString('en-NG')}
+                  ₦{(item.quantity || 1) * (item.basePrice || 0) || 0}
                 </span>
               </div>
             ))}
@@ -235,16 +256,16 @@ export default function OrderTrackingPage({ params }: { params: Promise<{ id: st
           <div className="pt-3 border-t border-gray-100 dark:border-white/10 space-y-2">
             <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
               <span>Subtotal</span>
-              <span>₦{subtotal.toLocaleString('en-NG')}</span>
+              <span>₦{Math.max(0, total - PICKUP_FEE).toLocaleString('en-US')}</span>
             </div>
             <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
               <span>Pickup Fee</span>
-              <span>₦{PICKUP_FEE.toLocaleString('en-NG')}</span>
+              <span>₦{PICKUP_FEE.toLocaleString('en-US')}</span>
             </div>
             <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-100 dark:border-white/10">
               <span className="text-sm font-bold text-gray-900 dark:text-white">Total</span>
               <span className="text-sm font-extrabold text-brand-cobalt">
-                ₦{total.toLocaleString('en-NG')}
+                ₦{total.toLocaleString('en-US')}
               </span>
             </div>
           </div>

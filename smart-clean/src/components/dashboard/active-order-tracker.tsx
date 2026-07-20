@@ -1,7 +1,8 @@
 "use client";
 import { motion } from "framer-motion";
-import { Phone, ArrowRight, Loader2, CheckCircle2, Circle } from "lucide-react";
+import { Phone, ArrowRight, CheckCircle2, Circle } from "lucide-react";
 import Link from "next/link";
+import { Spinner } from "@/components/ui/spinner";
 import {
   mockActiveOrder,
   trackingStages,
@@ -48,7 +49,7 @@ function StepNode({ stage, status, isLast }: StepNodeProps) {
               {/* Pulse ring */}
               <span className="absolute inset-0 rounded-full bg-brand-cobalt/30 animate-ping" />
               <div className="w-6 h-6 rounded-full bg-brand-cobalt flex items-center justify-center z-10 relative">
-                <Loader2 size={12} className="text-white animate-spin" />
+                <Spinner size={12} className="text-white" />
               </div>
             </div>
           )}

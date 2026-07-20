@@ -12,6 +12,7 @@ const health_1 = require("./routes/health");
 const orders_1 = require("./routes/orders");
 const rider_1 = require("./routes/rider");
 const admin_1 = require("./routes/admin");
+const catalog_1 = require("./routes/catalog");
 const server = (0, fastify_1.default)({
     logger: {
         level: process.env.NODE_ENV === "production" ? "warn" : "info",
@@ -29,12 +30,12 @@ async function start() {
         allowedHeaders: ["Content-Type", "Authorization", "X-API-Secret"],
     });
     // ── JWT ──────────────────────────────────────────────────────────────
-    // Must match the NEXTAUTH_SECRET used to sign tokens on the frontend.
-    if (!process.env.NEXTAUTH_SECRET) {
-        throw new Error("NEXTAUTH_SECRET environment variable is required");
+    // Must match the AUTH_SECRET used to sign tokens on the frontend.
+    if (!process.env.AUTH_SECRET) {
+        throw new Error("AUTH_SECRET environment variable is required");
     }
     await server.register(jwt_1.default, {
-        secret: process.env.NEXTAUTH_SECRET,
+        secret: process.env.AUTH_SECRET,
     });
     // ── Prisma ───────────────────────────────────────────────────────────
     await server.register(prisma_1.default);
@@ -43,6 +44,7 @@ async function start() {
     await server.register(orders_1.orderRoutes);
     await server.register(rider_1.riderRoutes);
     await server.register(admin_1.adminRoutes);
+    await server.register(catalog_1.catalogRoutes);
     // ── Start ─────────────────────────────────────────────────────────────
     const port = parseInt(process.env.PORT ?? "3001", 10);
     await server.listen({ port, host: "0.0.0.0" });

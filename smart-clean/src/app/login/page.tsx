@@ -1,12 +1,14 @@
 "use client";
+import { Suspense } from "react";
 import { AuthLayout } from "@/components/auth/login-auth-layout";
-import { LoginFormContent } from "@/components/auth/login-form-content"; // Move form code here
+import { LoginFormContent } from "@/components/auth/login-form-content";
 
 export default function LoginPage() {
   return (
     <AuthLayout>
-      {/* Now the form is inside AuthLayout, which means it is inside the Provider */}
-      <LoginFormContent />
+      <Suspense fallback={<div className="p-8 text-center text-gray-500 font-bold">Loading...</div>}>
+        <LoginFormContent />
+      </Suspense>
     </AuthLayout>
   );
 }

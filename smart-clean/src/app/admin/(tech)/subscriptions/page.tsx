@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, CreditCard, LayoutTemplate, Plus, MoreHorizontal, Calendar, X, Eye, Ban } from "lucide-react";
-import { mockAdminSubscriptions } from "@/data/mock-admin";
+import { AdminSubscription } from "@/data/mock-admin";
 import { sharedSubscriptionPlans } from "@/data/mock-shared";
+import { getSubscriptions } from "@/lib/api";
 import { CustomSelect } from "@/components/ui/custom-select";
 
 export default function AdminSubscriptions() {
@@ -12,6 +13,18 @@ export default function AdminSubscriptions() {
   const [showEditPlanModal, setShowEditPlanModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState<any>(null);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [subscriptions, setSubscriptions] = useState<AdminSubscription[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getSubscriptions().then(data => {
+      setSubscriptions(data);
+      setIsLoading(false);
+    }).catch(err => {
+      console.error(err);
+      setIsLoading(false);
+    });
+  }, []);
 
   const MOCK_PLANS = sharedSubscriptionPlans;
 
@@ -127,7 +140,15 @@ export default function AdminSubscriptions() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/5">
-                    {mockAdminSubscriptions.map((sub, i) => (
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-gray-500 font-bold">Loading subscriptions...</td>
+                      </tr>
+                    ) : subscriptions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="p-8 text-center text-gray-500 font-bold">No subscribers found.</td>
+                      </tr>
+                    ) : subscriptions.map((sub, i) => (
                       <motion.tr 
                         key={sub.id}
                         initial={{ opacity: 0, y: 10 }}

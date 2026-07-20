@@ -229,7 +229,7 @@ export function StepItems({ order, onChange, itemSelectionIndex = 0, onAddServic
                 </div>
                 <div className="text-right">
                   <p className="text-xs font-bold text-brand-cobalt">
-                    ₦{opt.min.toLocaleString("en-NG")} – ₦{opt.max.toLocaleString("en-NG")}
+                    ${opt.min.toLocaleString("en-US")} – ${opt.max.toLocaleString("en-US")}
                   </p>
                 </div>
               </button>
@@ -296,7 +296,7 @@ export function StepItems({ order, onChange, itemSelectionIndex = 0, onAddServic
                     {item.name}
                   </p>
                   <p className="text-[10px] text-gray-400">
-                    ₦{item.basePrice.toLocaleString("en-NG")}/{item.unit}
+                    ${item.basePrice.toLocaleString("en-US")}/{item.unit}
                   </p>
                 </div>
               </div>
