@@ -74,8 +74,9 @@ model VerificationToken {
 // ── BUSINESS MODELS ────────────────────────────────────────────────────
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
+  id             String    @id @default(cuid())
+  customerNumber Int?      @unique
+  name           String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
@@ -142,6 +143,9 @@ model Service {
   unit        String
   description String
   isActive    Boolean @default(true)
+  isArchived  Boolean @default(false)
+  isPopular   Boolean @default(false)
+  displayOrder Int    @default(0)
   imagePath   String?
 
   createdAt DateTime @default(now())

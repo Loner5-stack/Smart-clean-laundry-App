@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -73,8 +74,9 @@ model VerificationToken {
 // ── BUSINESS MODELS ────────────────────────────────────────────────────
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
+  id             String    @id @default(cuid())
+  customerNumber Int?      @unique
+  name           String?
   email         String?   @unique
   emailVerified DateTime?
   image         String?
@@ -141,25 +143,10 @@ model Service {
   unit        String
   description String
   isActive    Boolean @default(true)
-  imagePath   String?
-  displayOrder Int    @default(0)
+  isArchived  Boolean @default(false)
   isPopular   Boolean @default(false)
-
-  garments    GarmentItem[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model GarmentItem {
-  id        String  @id @default(cuid())
-  name      String
-  emoji     String
-  basePrice Decimal @db.Decimal(10, 2)
-  unit      String
-  isActive  Boolean @default(true)
-
-  services  Service[]
+  displayOrder Int    @default(0)
+  imagePath   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -201,19 +188,13 @@ model AuditLog {
   timestamp  DateTime @default(now())
 }
 
-// ── PLAN ────────────────────────────────────────────────────────────────────
-// Source of truth for all subscription plans. Frontend reads from here
-// instead of hardcoding plan data in components.
-
 model Plan {
   id               String   @id @default(cuid())
   name             String   @unique  // "Basic", "Standard", "Premium Family"
-  // Price stored in kobo (smallest Naira unit) to avoid floating-point issues
   priceKobo        Int
   billingCycle     String   @default("monthly") // "monthly" | "yearly"
   piecesPerMonth   Int
   pickupsPerMonth  Int
-  // JSON array of feature strings, e.g. ["Free pickup", "Priority support"]
   features         Json
   isPopular        Boolean  @default(false)
   isActive         Boolean  @default(true)
@@ -223,10 +204,6 @@ model Plan {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
-
-// ── NOTIFICATION ─────────────────────────────────────────────────────────────
-// Persistent in-app notification history. Fastify writes a row here every time
-// a significant event occurs; the frontend polls or subscribes for unread count.
 
 model Notification {
   id        String           @id @default(cuid())
@@ -238,16 +215,11 @@ model Notification {
   message   String
   isRead    Boolean          @default(false)
 
-  // Optional FK — lets the frontend deep-link directly to the relevant order
   orderId   String?
   order     Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   createdAt DateTime         @default(now())
 }
-
-// ── ORDER STATUS HISTORY ──────────────────────────────────────────────────────
-// Immutable audit log of every status transition an order goes through.
-// Enables customer tracking timeline, admin audit trail, and rider perf metrics.
 
 model OrderStatusHistory {
   id        String      @id @default(cuid())
@@ -255,10 +227,21 @@ model OrderStatusHistory {
   order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   status    OrderStatus
-  // Who triggered this transition — customer, rider, or admin userId
   changedBy String
-  // Optional human-readable note, e.g. "Admin manually advanced to AT_HUB"
   note      String?
 
   changedAt DateTime    @default(now())
+}
+
+model TierSetting {
+  id                 String   @id @default(cuid())
+  level              Int      @unique
+  name               String   @unique // Bronze, Silver, Gold
+  minOrders          Int      @default(0)
+  maxOrders          Int?
+  discountPercentage Float    @default(0)
+  perks              Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

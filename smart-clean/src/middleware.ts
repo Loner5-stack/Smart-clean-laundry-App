@@ -6,9 +6,10 @@ import { jwtVerify } from "jose";
 // We initialize auth using ONLY the edge-compatible config for the middleware.
 const { auth } = NextAuth(authConfig);
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "fallback_secret_for_development_only"
-);
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET is not defined in environment variables.");
+}
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 
 export default auth(async (request) => {
   const { nextUrl, auth: session } = request;
@@ -37,7 +38,10 @@ export default auth(async (request) => {
     }
     
     try {
-      await jwtVerify(adminToken, SECRET);
+      await jwtVerify(adminToken, SECRET, {
+        issuer: "smart-clean-admin",
+        audience: "smart-clean-admin",
+      });
     } catch (err) {
       return NextResponse.redirect(new URL("/admin/login", nextUrl));
     }

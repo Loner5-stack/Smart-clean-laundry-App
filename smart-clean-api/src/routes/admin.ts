@@ -221,7 +221,7 @@ export async function adminRoutes(server: FastifyInstance) {
         ];
       }
 
-      const [users, total] = await Promise.all([
+      const [users, total, tiers] = await Promise.all([
         server.prisma.user.findMany({
           where,
           include: {
@@ -239,18 +239,49 @@ export async function adminRoutes(server: FastifyInstance) {
           skip,
           take: limitNum,
         }),
-        server.prisma.user.count({ where })
+        server.prisma.user.count({ where }),
+        server.prisma.tierSetting.findMany({ orderBy: { minOrders: "asc" } })
       ]);
       
       const mappedCustomers = users.map(user => {
         const totalOrders = user.orders.length;
         const totalSpend = user.orders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
-        let loyaltyTier = "Tier 1";
-        if (totalOrders > 30) loyaltyTier = "Tier 3";
-        else if (totalOrders > 10) loyaltyTier = "Tier 2";
+        
+        let loyaltyTier: string | null = null;
+        let ordersToNextTier: number | null = null;
+
+        if (tiers && tiers.length > 0) {
+          // Find the highest tier the user qualifies for
+          let currentTierIndex = -1;
+          for (let i = tiers.length - 1; i >= 0; i--) {
+            if (totalOrders >= tiers[i].minOrders) {
+              currentTierIndex = i;
+              loyaltyTier = tiers[i].name;
+              break;
+            }
+          }
+
+          if (currentTierIndex === -1 && tiers.length > 0) {
+            // User hasn't even hit the lowest tier? Default to lowest.
+            loyaltyTier = tiers[0].name;
+            ordersToNextTier = tiers[0].minOrders - totalOrders;
+            if (ordersToNextTier < 0) ordersToNextTier = 0;
+          } else if (currentTierIndex < tiers.length - 1) {
+            // Has a next tier
+            ordersToNextTier = tiers[currentTierIndex + 1].minOrders - totalOrders;
+          } else {
+            // Max tier
+            ordersToNextTier = 0;
+          }
+        } else {
+          // No fallback - if no tiers exist, return null
+          loyaltyTier = null;
+          ordersToNextTier = null;
+        }
 
         return {
           id: user.id,
+          customerNumber: user.customerNumber,
           name: user.name || "Unknown",
           email: user.email || "No Email",
           phone: user.phone || "No Phone",
@@ -261,7 +292,8 @@ export async function adminRoutes(server: FastifyInstance) {
           lastOrderDate: user.orders[0]?.createdAt.toISOString() || new Date(0).toISOString(),
           memberSince: user.createdAt.toISOString(),
           status: "Active", // Or derived from metadata
-          activeSubscription: user.subscriptions[0]?.plan?.name || null
+          activeSubscription: user.subscriptions[0]?.plan?.name || null,
+          ordersToNextTier: ordersToNextTier
         };
       });
 
@@ -273,6 +305,120 @@ export async function adminRoutes(server: FastifyInstance) {
           limit: limitNum,
           totalPages: Math.ceil(total / limitNum)
         }
+      });
+    }
+  );
+
+  /**
+   * GET /api/admin/users/:id
+   * Returns a specific customer with their recent orders and subscriptions.
+   */
+  server.get(
+    "/api/admin/users/:id",
+    { preHandler: [verifyAuth, requireRole("ADMIN")] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+
+      const [user, tiers] = await Promise.all([
+        server.prisma.user.findUnique({
+          where: { id },
+          include: {
+            orders: {
+              orderBy: { createdAt: "desc" },
+              include: {
+                rider: { select: { id: true, user: { select: { name: true } } } }
+              }
+            },
+            subscriptions: {
+              where: { status: "ACTIVE" },
+              include: { plan: true },
+              take: 1
+            }
+          }
+        }),
+        server.prisma.tierSetting.findMany({ orderBy: { minOrders: "asc" } })
+      ]);
+
+      if (!user) {
+        return reply.status(404).send({ error: "Customer not found" });
+      }
+
+      const totalOrders = user.orders.length;
+      const totalSpend = user.orders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
+      
+      let loyaltyTier: string | null = null;
+      let ordersToNextTier: number | null = null;
+
+      if (tiers && tiers.length > 0) {
+        // Find the highest tier the user qualifies for
+        let currentTierIndex = -1;
+        for (let i = tiers.length - 1; i >= 0; i--) {
+          if (totalOrders >= tiers[i].minOrders) {
+            currentTierIndex = i;
+            loyaltyTier = tiers[i].name;
+            break;
+          }
+        }
+
+        if (currentTierIndex === -1 && tiers.length > 0) {
+          loyaltyTier = tiers[0].name;
+          ordersToNextTier = tiers[0].minOrders - totalOrders;
+          if (ordersToNextTier < 0) ordersToNextTier = 0;
+        } else if (currentTierIndex < tiers.length - 1) {
+          ordersToNextTier = tiers[currentTierIndex + 1].minOrders - totalOrders;
+        } else {
+          ordersToNextTier = 0;
+        }
+      } else {
+        // No fallback
+        loyaltyTier = null;
+        ordersToNextTier = null;
+      }
+
+      const customerProfile = {
+        id: user.id,
+        customerNumber: user.customerNumber,
+        name: user.name || "Unknown",
+        email: user.email || "No Email",
+        phone: user.phone || "No Phone",
+        address: user.address || "No Address",
+        totalOrders: totalOrders,
+        totalSpend: totalSpend,
+        loyaltyTier: loyaltyTier,
+        lastOrderDate: user.orders[0]?.createdAt.toISOString() || new Date(0).toISOString(),
+        memberSince: user.createdAt.toISOString(),
+        status: "Active", // Or derived from metadata
+        activeSubscription: user.subscriptions[0]?.plan?.name || null,
+        ordersToNextTier: ordersToNextTier
+      };
+
+      const recentOrders = user.orders.map(o => {
+        const items = Array.isArray(o.items) ? o.items : [];
+        const pickupDetails = typeof o.pickupDetails === 'object' && o.pickupDetails !== null ? o.pickupDetails : {};
+        
+        return {
+          id: o.orderNumber,
+          customerName: user.name || "Unknown",
+          customerPhone: user.phone || "Unknown",
+          customerAddress: user.address || "Unknown",
+          services: items.map((i: any) => i.name),
+          status: o.status,
+          rider: o.rider?.user?.name || null,
+          pickupDate: (pickupDetails as any).date || "Unknown",
+          pickupTimeSlot: (pickupDetails as any).timeSlot || "Unknown",
+          totalAmount: Number(o.totalAmount),
+          placedAt: o.createdAt.toISOString(),
+          paymentStatus: o.paymentStatus,
+          paymentMethod: o.paymentMethod || "Card",
+          items: items as any,
+          bagSelections: [],
+          notes: []
+        };
+      });
+
+      return reply.send({
+        customer: customerProfile,
+        recentOrders: recentOrders
       });
     }
   );
@@ -323,6 +469,7 @@ export async function adminRoutes(server: FastifyInstance) {
     { preHandler: [verifyAuth, requireRole("ADMIN")] },
     async (_request, reply) => {
       const services = await server.prisma.service.findMany({
+        where: { isArchived: false },
         orderBy: { displayOrder: "asc" },
       });
       
@@ -361,16 +508,21 @@ export async function adminRoutes(server: FastifyInstance) {
         imagePath?: string;
       };
 
-      // Generate ID in format svc-X
-      const allServices = await server.prisma.service.findMany({ select: { id: true } });
+      // Generate ID in format svc-X optimally
       let maxNum = 0;
-      for (const s of allServices) {
-        if (s.id.startsWith("svc-")) {
-          const num = parseInt(s.id.replace("svc-", ""), 10);
-          if (!isNaN(num) && num > maxNum) {
-            maxNum = num;
-          }
+      try {
+        // Query the max number natively in Postgres
+        const result: any[] = await server.prisma.$queryRawUnsafe(`
+          SELECT MAX(CAST(SUBSTRING(id FROM 5) AS INTEGER)) as max_num 
+          FROM "Service" 
+          WHERE id LIKE 'svc-%' AND id ~ '^svc-[0-9]+$'
+        `);
+        if (result && result.length > 0 && result[0].max_num) {
+          maxNum = Number(result[0].max_num);
         }
+      } catch (e) {
+        request.log.warn("Failed to generate optimized ID, falling back to simple count", e);
+        maxNum = await server.prisma.service.count();
       }
       const newId = `svc-${maxNum + 1}`;
 
@@ -466,8 +618,9 @@ export async function adminRoutes(server: FastifyInstance) {
     async (request, reply) => {
       try {
         const { id } = request.params as { id: string };
-        await server.prisma.service.delete({
+        await server.prisma.service.update({
           where: { id },
+          data: { isArchived: true, isActive: false },
         });
         return reply.send({ success: true });
       } catch (err: any) {

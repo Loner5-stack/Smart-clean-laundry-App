@@ -58,11 +58,16 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
-const API_SECRET = process.env.API_SECRET || "smart-clean-internal-secret-xyz-123";
+if (!process.env.API_SECRET) {
+  throw new Error("API_SECRET is not defined in environment variables.");
+}
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET is not defined in environment variables.");
+}
+
+const API_SECRET = process.env.API_SECRET;
+const JWT_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 const TECH_PASSKEY = process.env.TECH_PASSKEY || "";
-const JWT_SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "fallback_secret_for_development_only"
-);
 
 async function fetchFromAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   let userId = "";
@@ -75,7 +80,10 @@ async function fetchFromAPI<T>(endpoint: string, options: RequestInit = {}): Pro
   // 1. Try Admin Custom JWT (sc_admin_session) if accessing an admin endpoint
   if (isAdminEndpoint && adminToken) {
     try {
-      const { payload } = await jwtVerify(adminToken, JWT_SECRET);
+      const { payload } = await jwtVerify(adminToken, JWT_SECRET, {
+        issuer: "smart-clean-admin",
+        audience: "smart-clean-admin",
+      });
       if (payload && payload.id) {
         userId = String(payload.id);
         userRole = (payload.role as string) || "ADMIN";
@@ -174,13 +182,19 @@ export async function getOrders(
   return fetchFromAPI<PaginatedResponse<AdminOrder>>(`/admin/orders?${query.toString()}`);
 }
 
-/** Fetch a single order by ID. */
+/** 
+ * Fetch a single order by ID. 
+ * // TODO: wire to backend
+ */
 export async function getOrderById(id: string): Promise<AdminOrder | null> {
   await simulateDelay();
   return mockAdminOrders.find((o) => o.id === id) ?? null;
 }
 
-/** Update an order's status. Returns the updated order. */
+/** 
+ * Update an order's status. Returns the updated order. 
+ * // TODO: wire to backend
+ */
 export async function updateOrderStatus(
   id: string,
   status: AdminOrder["status"]
@@ -192,7 +206,10 @@ export async function updateOrderStatus(
   return order ? { ...order, status } : null;
 }
 
-/** Assign a rider to an order. */
+/** 
+ * Assign a rider to an order. 
+ * // TODO: wire to backend
+ */
 export async function assignRiderToOrder(
   orderId: string,
   riderId: string
@@ -224,22 +241,32 @@ export async function getCustomers(
 }
 
 /** Fetch a single customer's profile by ID. */
-export async function getCustomerById(id: string): Promise<AdminCustomer | null> {
-  await simulateDelay();
-  return mockAdminCustomers.find((c) => c.id === id) ?? null;
+export async function getCustomerById(id: string): Promise<{ customer: AdminCustomer; recentOrders: AdminOrder[] } | null> {
+  try {
+    return await fetchFromAPI<{ customer: AdminCustomer; recentOrders: AdminOrder[] }>(`/admin/users/${id}`);
+  } catch (error) {
+    console.error("Failed to fetch customer details:", error);
+    return null;
+  }
 }
 
 // ------------------------------------------------------------------
 // ADMIN — RIDERS
 // ------------------------------------------------------------------
 
-/** Fetch all riders for the admin rider fleet table. */
+/** 
+ * Fetch all riders for the admin rider fleet table. 
+ * // TODO: wire to backend
+ */
 export async function getRiders(): Promise<AdminRider[]> {
   await simulateDelay();
   return mockAdminRiders;
 }
 
-/** Fetch a single rider's profile by ID. */
+/** 
+ * Fetch a single rider's profile by ID. 
+ * // TODO: wire to backend
+ */
 export async function getRiderById(id: string): Promise<AdminRider | null> {
   await simulateDelay();
   return mockAdminRiders.find((r) => r.id === id) ?? null;
@@ -309,7 +336,10 @@ export async function getSubscriptions(): Promise<AdminSubscription[]> {
 // SHARED — SUBSCRIPTION PLANS
 // ------------------------------------------------------------------
 
-/** Fetch the canonical subscription plans used by both customer and admin pages. */
+/** 
+ * Fetch the canonical subscription plans used by both customer and admin pages. 
+ * // TODO: wire to backend
+ */
 export async function getSubscriptionPlans(): Promise<SharedPlan[]> {
   await simulateDelay();
   return sharedSubscriptionPlans;
@@ -319,7 +349,10 @@ export async function getSubscriptionPlans(): Promise<SharedPlan[]> {
 // SHARED — LOYALTY CONFIG
 // ------------------------------------------------------------------
 
-/** Fetch the loyalty tier configuration used for tier display and calculations. */
+/** 
+ * Fetch the loyalty tier configuration used for tier display and calculations. 
+ * // TODO: wire to backend
+ */
 export async function getLoyaltyConfig(): Promise<LoyaltyTier[]> {
   await simulateDelay();
   return sharedLoyaltyConfig;
@@ -329,19 +362,28 @@ export async function getLoyaltyConfig(): Promise<LoyaltyTier[]> {
 // CUSTOMER — DASHBOARD
 // ------------------------------------------------------------------
 
-/** Fetch the current user's profile data. */
+/** 
+ * Fetch the current user's profile data. 
+ * // TODO: wire to backend
+ */
 export async function getCurrentUser(): Promise<typeof mockUser> {
   await simulateDelay();
   return mockUser;
 }
 
-/** Fetch the current user's dashboard stats (order counts, reward points etc.). */
+/** 
+ * Fetch the current user's dashboard stats (order counts, reward points etc.). 
+ * // TODO: wire to backend
+ */
 export async function getDashboardStats(): Promise<typeof mockStats> {
   await simulateDelay();
   return mockStats;
 }
 
-/** Fetch the customer's active (in-progress) order, or null if none. */
+/** 
+ * Fetch the customer's active (in-progress) order, or null if none. 
+ * // TODO: wire to backend
+ */
 export async function getActiveOrder(): Promise<ActiveOrder | null> {
   await simulateDelay();
   return mockActiveOrder;
@@ -361,7 +403,10 @@ export async function getCustomerOrderById(id: string): Promise<Order | null> {
 // ORDER WIZARD — REFERENCE DATA
 // ------------------------------------------------------------------
 
-/** Fetch garment items with pricing for the order wizard. */
+/** 
+ * Fetch garment items with pricing for the order wizard. 
+ * // TODO: create /garments route on backend
+ */
 export async function getGarmentItems(): Promise<typeof garmentItems> {
   return fetchFromAPI<typeof garmentItems>("/garments");
 }
@@ -369,13 +414,17 @@ export async function getGarmentItems(): Promise<typeof garmentItems> {
 /**
  * Fetch the allowed garment items for a specific service ID.
  * Used in Step 2 of the order wizard to show per-service item lists.
+ * // TODO: wire to backend
  */
 export async function getItemsForServiceId(serviceId: string): Promise<typeof garmentItems> {
   await simulateDelay();
   return getItemsForService(serviceId);
 }
 
-/** Fetch available pickup time slots for Step 3 of the order wizard. */
+/** 
+ * Fetch available pickup time slots for Step 3 of the order wizard. 
+ * // TODO: wire to backend
+ */
 export async function getTimeSlots(): Promise<typeof timeSlots> {
   await simulateDelay();
   return timeSlots;

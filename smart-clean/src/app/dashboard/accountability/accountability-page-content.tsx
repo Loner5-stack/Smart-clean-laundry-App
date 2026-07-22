@@ -23,7 +23,7 @@ export default function AccountabilityPageContent({
   dbTiers,
 }: {
   totalOrders: number;
-  currentTierName: string;
+  currentTierName: string | null;
   nextTier: { name: string; ordersNeeded: number } | null;
   dbTiers: Array<{
     level: number;
@@ -38,7 +38,7 @@ export default function AccountabilityPageContent({
 
   // Data for User Loyalty
   const nextTierThreshold = nextTier ? totalOrders + nextTier.ordersNeeded : totalOrders;
-  const progressPercent = nextTierThreshold > totalOrders ? Math.min((totalOrders / nextTierThreshold) * 100, 100) : 100;
+  const progressPercent = dbTiers.length === 0 ? 0 : (nextTierThreshold > totalOrders ? Math.min((totalOrders / nextTierThreshold) * 100, 100) : 100);
 
   const pillars = [
     { name: "Accountability", desc: "Every garment is tracked, documented, and fully insured from pickup to drop-off.", icon: <ShieldCheck size={24} /> },
@@ -113,11 +113,11 @@ export default function AccountabilityPageContent({
             {/* Background glow */}
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-brand-cobalt/5 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex items-center justify-between mb-6">
+            <div className={`flex items-center justify-between mb-6 ${dbTiers.length === 0 ? 'opacity-50' : ''}`}>
               <div>
                 <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-1">Your Status</p>
-                <h2 className="text-3xl font-black text-brand-cobalt flex items-center gap-2">
-                  <Award size={28} /> {currentTierName}
+                <h2 className={`text-3xl font-black flex items-center gap-2 ${dbTiers.length === 0 ? 'text-gray-500' : 'text-brand-cobalt'}`}>
+                  <Award size={28} /> {currentTierName || "Unassigned"}
                 </h2>
               </div>
               <div className="text-right">
@@ -147,14 +147,25 @@ export default function AccountabilityPageContent({
                 </motion.div>
               </div>
             </div>
-            <p className="text-xs text-gray-400 font-medium">
-              You are currently enjoying a <strong className="text-brand-cobalt">1% discount</strong> on all orders!
-            </p>
+            {dbTiers.length > 0 ? (
+              <p className="text-xs text-gray-400 font-medium">
+                You are currently enjoying a <strong className="text-brand-cobalt">discount</strong> on all orders!
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400 font-medium italic">
+                Loyalty tiers are currently being set up. Check back soon!
+              </p>
+            )}
           </motion.div>
 
           {/* Tier Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {tiers.map((tier, idx) => (
+            {dbTiers.length === 0 ? (
+              <div className="col-span-1 md:col-span-3 p-8 border border-dashed border-gray-200 dark:border-white/10 rounded-2xl flex items-center justify-center text-gray-400 text-sm font-medium">
+                No tiers configured yet.
+              </div>
+            ) : (
+              tiers.map((tier, idx) => (
               <motion.div
                 key={tier.level}
                 initial={{ opacity: 0, y: 20 }}
@@ -194,7 +205,7 @@ export default function AccountabilityPageContent({
                   ))}
                 </ul>
               </motion.div>
-            ))}
+            )))}
           </div>
         </div>
 

@@ -7,7 +7,7 @@ export async function catalogRoutes(server: FastifyInstance) {
    */
   server.get("/api/services", async (_request, reply) => {
     const services = await server.prisma.service.findMany({
-      where: { isActive: true },
+      where: { isActive: true, isArchived: false },
       orderBy: { displayOrder: "asc" },
     });
     
@@ -33,7 +33,7 @@ export async function catalogRoutes(server: FastifyInstance) {
    */
   server.get("/api/services/popular", async (_request, reply) => {
     const services = await server.prisma.service.findMany({
-      where: { isActive: true, isPopular: true },
+      where: { isActive: true, isPopular: true, isArchived: false },
       orderBy: { displayOrder: "asc" },
     });
     

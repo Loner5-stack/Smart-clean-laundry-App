@@ -53,15 +53,34 @@ export async function signupAction(formData: FormData): Promise<SignupResult> {
     // ── Hash password and create user ──────────────────────────────────────
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    await prisma.user.create({
-      data: {
-        name,
-        email,
-        phone,
-        address,
-        password: hashedPassword,
-        role: "CUSTOMER",
-      },
+    // ── Compute next sequential customerNumber safely (Atomic Transaction) ──
+    await prisma.$transaction(async (tx) => {
+      // 1. Acquire an exclusive transaction-level advisory lock
+      // The lock ID (1001) is arbitrary but unique to the customerNumber process.
+      // This forces any concurrent signups to wait in line here until the lock is released.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(1001)`;
+
+      // 2. Find the highest existing customerNumber
+      const maxCustomer = await tx.user.findFirst({
+        where: { role: "CUSTOMER", customerNumber: { not: null } },
+        orderBy: { customerNumber: "desc" },
+        select: { customerNumber: true },
+      });
+
+      const nextCustomerNumber = (maxCustomer?.customerNumber || 0) + 1;
+
+      // 3. Create the user safely
+      await tx.user.create({
+        data: {
+          name,
+          email,
+          phone,
+          address,
+          password: hashedPassword,
+          role: "CUSTOMER",
+          customerNumber: nextCustomerNumber,
+        },
+      });
     });
 
     return { success: true };

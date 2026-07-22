@@ -26,6 +26,7 @@ export interface AdminOrder {
 
 export interface AdminCustomer {
   id: string;
+  customerNumber: number;
   name: string;
   email: string;
   phone: string;
@@ -35,8 +36,9 @@ export interface AdminCustomer {
   loyaltyTier: LoyaltyTier;
   lastOrderDate: string; // ISO
   memberSince: string; // ISO
-  status: "Active" | "Suspended";
-  activeSubscription?: string | null;
+  status: "Active" | "Inactive" | "Suspended";
+  activeSubscription: string | null;
+  ordersToNextTier?: number;
 }
 
 export interface AdminRider {
@@ -188,6 +190,7 @@ export const mockAdminOrders: AdminOrder[] = [
 export const mockAdminCustomers: AdminCustomer[] = [
   {
     id: "CUST-001",
+    customerNumber: 1,
     name: "Amaka Johnson",
     email: "amaka.j@example.com",
     phone: "0803 123 4567",
@@ -198,10 +201,12 @@ export const mockAdminCustomers: AdminCustomer[] = [
     lastOrderDate: today.toISOString(),
     memberSince: new Date(today.getTime() - 1000 * 60 * 60 * 24 * 180).toISOString(), // 6 months ago
     status: "Active",
-    activeSubscription: "Premium Family",
+    activeSubscription: "Premium Wash & Fold",
+    ordersToNextTier: 2,
   },
   {
     id: "CUST-002",
+    customerNumber: 2,
     name: "Emeka Okafor",
     email: "emeka.o@example.com",
     phone: "0812 987 6543",
@@ -212,9 +217,11 @@ export const mockAdminCustomers: AdminCustomer[] = [
     lastOrderDate: today.toISOString(),
     memberSince: new Date(today.getTime() - 1000 * 60 * 60 * 24 * 45).toISOString(),
     status: "Active",
+    activeSubscription: null,
   },
   {
     id: "CUST-003",
+    customerNumber: 3,
     name: "Zainab Bello",
     email: "zainab.b@example.com",
     phone: "0706 555 8899",
@@ -229,6 +236,7 @@ export const mockAdminCustomers: AdminCustomer[] = [
   },
   {
     id: "CUST-004",
+    customerNumber: 4,
     name: "David Nwachukwu",
     email: "david.n@example.com",
     phone: "0908 777 6655",
@@ -239,6 +247,7 @@ export const mockAdminCustomers: AdminCustomer[] = [
     lastOrderDate: new Date(0).toISOString(),
     memberSince: new Date(today.getTime() - 1000 * 60 * 60 * 24 * 2).toISOString(),
     status: "Suspended",
+    activeSubscription: null,
   },
 ];
 

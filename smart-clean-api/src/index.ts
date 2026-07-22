@@ -25,7 +25,7 @@ async function start() {
       process.env.FRONTEND_URL ?? "https://smart-clean.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-API-Secret"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-API-Secret", "X-User-Id", "X-User-Role", "X-Tech-Passkey"],
   });
 
   // ── JWT ──────────────────────────────────────────────────────────────

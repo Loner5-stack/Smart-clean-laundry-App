@@ -26,7 +26,7 @@ export function AccountPageContent({
   };
   tierData: {
     success: boolean;
-    tierName: string;
+    tierName: string | null;
     completedOrders: number;
     nextTier?: { name: string; ordersNeeded: number } | null;
   };
@@ -78,9 +78,9 @@ export function AccountPageContent({
         <div className="text-center sm:text-left flex-1">
           <div className="flex flex-col sm:flex-row items-center gap-2">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white">{user.name || "Customer"}</h2>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border ${tierData.tierName ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20" : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-white/10"}`}>
               <Award size={14} />
-              <span className="text-xs font-black uppercase tracking-wider">{tierData.tierName} Tier</span>
+              <span className="text-xs font-black uppercase tracking-wider">{tierData.tierName ? `${tierData.tierName} Tier` : "Unassigned Tier"}</span>
             </div>
           </div>
           <p className="text-sm text-gray-400 mt-1">{user.role} • {tierData.completedOrders} Orders Completed</p>

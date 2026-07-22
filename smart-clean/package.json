@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:sync": "node -e \"require('fs').copyFileSync('prisma/schema.prisma', '../smart-clean-api/prisma/schema.prisma'); console.log('✓ Synced schema to backend');\" && prisma generate",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",

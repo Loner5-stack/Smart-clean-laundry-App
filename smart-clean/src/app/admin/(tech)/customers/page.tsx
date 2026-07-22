@@ -142,7 +142,7 @@ export default function AdminCustomers() {
                       {customer.name}
                     </div>
                     <div className="text-xs font-semibold text-gray-500 mt-0.5">
-                      {customer.id}
+                      CL-CUST-{String(customer.customerNumber).padStart(4, '0')}
                     </div>
                   </td>
                   <td className="p-4">

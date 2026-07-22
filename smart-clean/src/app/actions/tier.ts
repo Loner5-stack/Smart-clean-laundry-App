@@ -19,10 +19,12 @@ export async function getUserTierData(userId: string) {
 
     // 3. Fallback to default tiers if none exist in DB yet
     if (tiers.length === 0) {
-      await seedDefaultTiers();
-      tiers = await prisma.tierSetting.findMany({
-        orderBy: { minOrders: "desc" },
-      });
+      return {
+        success: true,
+        tierName: null,
+        completedOrders,
+        nextTier: null,
+      };
     }
 
     // 4. Determine user's tier
@@ -57,7 +59,7 @@ export async function updateTierThresholds(updates: { id: string; minOrders: num
   }
 }
 
-async function seedDefaultTiers() {
+export async function seedDefaultTiers() {
   const defaultTiers = [
     { level: 1, name: "Bronze", minOrders: 0, maxOrders: 10, discountPercentage: 0, perks: ["Standard Queue", "Live Tracking"] },
     { level: 2, name: "Silver", minOrders: 11, maxOrders: 30, discountPercentage: 1, perks: ["Standard Queue", "Live Tracking", "Dedicated Support"] },
@@ -92,10 +94,7 @@ export async function getTiers() {
   });
 
   if (tiers.length === 0) {
-    await seedDefaultTiers();
-    tiers = await prisma.tierSetting.findMany({
-      orderBy: { minOrders: "asc" },
-    });
+    return [];
   }
 
   return tiers;

@@ -5,9 +5,10 @@ import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "fallback_secret_for_development_only"
-);
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET is not defined in environment variables.");
+}
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 
 export async function updateAdminPasscodeAction(formData: FormData) {
   const cookieStore = await cookies();
@@ -19,7 +20,10 @@ export async function updateAdminPasscodeAction(formData: FormData) {
 
   let adminId: string;
   try {
-    const { payload } = await jwtVerify(adminToken, SECRET);
+    const { payload } = await jwtVerify(adminToken, SECRET, {
+      issuer: "smart-clean-admin",
+      audience: "smart-clean-admin",
+    });
     adminId = payload.id as string;
   } catch (err) {
     return { success: false, error: "Unauthorized." };

@@ -4,12 +4,22 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 import { cookies } from "next/headers";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "fallback_secret_for_development_only"
-);
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET is not defined in environment variables.");
+}
+const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
 
 export async function adminLoginAction(formData: FormData) {
+  const ip = await getClientIp();
+  
+  // ── Rate limit by IP ─────────────────────────────────────────────────────
+  const ipLimit = await checkRateLimit(`admin_login_ip_${ip}`);
+  if (!ipLimit.success) {
+    return { success: false, error: `Too many login attempts. Please try again in ${ipLimit.retryAfter} seconds.` };
+  }
+
   const passcode = formData.get("passcode") as string;
 
   if (!passcode) {
@@ -17,11 +27,21 @@ export async function adminLoginAction(formData: FormData) {
   }
 
   try {
-    const adminUser = await prisma.user.findFirst({
+    const admins = await prisma.user.findMany({
       where: { role: "ADMIN" },
     });
 
-    if (!adminUser || !adminUser.password) {
+    if (admins.length === 0) {
+      return { success: false, error: "Admin account not found in the system." };
+    }
+    
+    if (admins.length > 1) {
+      return { success: false, error: "System configuration error: Multiple admins detected. Standalone login disabled." };
+    }
+
+    const adminUser = admins[0];
+
+    if (!adminUser.password) {
       return { success: false, error: "Admin account not properly configured." };
     }
 
@@ -39,6 +59,8 @@ export async function adminLoginAction(formData: FormData) {
     })
       .setProtectedHeader({ alg: "HS256" })
       .setIssuedAt()
+      .setIssuer("smart-clean-admin")
+      .setAudience("smart-clean-admin")
       .setExpirationTime("24h")
       .sign(SECRET);
 
