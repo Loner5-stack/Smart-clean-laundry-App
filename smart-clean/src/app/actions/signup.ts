@@ -54,7 +54,7 @@ export async function signupAction(formData: FormData): Promise<SignupResult> {
     const hashedPassword = await bcrypt.hash(password, 12);
 
     // ── Compute next sequential customerNumber safely (Atomic Transaction) ──
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]) => {
       // 1. Acquire an exclusive transaction-level advisory lock
       // The lock ID (1001) is arbitrary but unique to the customerNumber process.
       // This forces any concurrent signups to wait in line here until the lock is released.
