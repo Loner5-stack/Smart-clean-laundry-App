@@ -66,6 +66,7 @@ export interface AdminService {
   imagePath?: string | null;
   displayOrder?: number;
   isPopular?: boolean;
+  garmentItemIds?: string[];
 }
 
 export interface AdminSubscription {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
@@ -17,7 +17,10 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning is REQUIRED here so Next.js doesn't throw an error when the theme changes the HTML
     <html lang="en" className="h-full overflow-hidden" suppressHydrationWarning>
-      <body suppressHydrationWarning className=" h-full overflow-hidden antialiased text-brand-obsidian dark:text-brand-paper bg-brand-paper dark:bg-brand-obsidian">
+      <body
+        suppressHydrationWarning
+        className=" h-full overflow-hidden antialiased text-brand-obsidian dark:text-brand-paper bg-brand-paper dark:bg-brand-obsidian"
+      >
         {/* THE ENGINE: Wrapping our entire app so it remembers light/dark mode */}
         <ThemeProvider
           attribute="class"
@@ -25,9 +28,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionProvider>
-            {children}
-          </SessionProvider>
+          <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>
       </body>
     </html>

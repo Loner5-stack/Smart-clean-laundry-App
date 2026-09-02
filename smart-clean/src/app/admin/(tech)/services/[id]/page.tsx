@@ -5,7 +5,7 @@ import { ArrowLeft, Save, Eye, EyeOff, Check } from "lucide-react";
 import { mockAdminServices } from "@/data/mock-admin";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { getServiceById, updateService } from "@/lib/api";
+import { getServiceById, updateService, getGarmentItems } from "@/lib/api";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { uploadImageAction } from "@/app/actions/upload";
 import Image from "next/image";
@@ -25,20 +25,29 @@ export default function EditService() {
   const [unit, setUnit] = useState("per item");
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  
+  const [allGarments, setAllGarments] = useState<any[]>([]);
+  const [selectedGarmentIds, setSelectedGarmentIds] = useState<string[]>([]);
+  
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
-    getServiceById(id).then(data => {
-      setService(data);
-      setName(data.name);
-      setPrice(data.price);
-      setDescription(data.description);
-      setIsActive(data.isActive);
-      setCategory(data.category);
-      setUnit(data.unit);
-      setImagePath(data.imagePath || null);
+    Promise.all([
+      getServiceById(id),
+      getGarmentItems()
+    ]).then(([serviceData, garmentsData]) => {
+      setService(serviceData);
+      setName(serviceData.name);
+      setPrice(serviceData.price);
+      setDescription(serviceData.description);
+      setIsActive(serviceData.isActive);
+      setCategory(serviceData.category);
+      setUnit(serviceData.unit);
+      setImagePath(serviceData.imagePath || null);
+      setAllGarments(garmentsData);
+      setSelectedGarmentIds(serviceData.garmentItemIds || []);
       setIsLoading(false);
     }).catch(err => {
       console.error(err);
@@ -64,7 +73,16 @@ export default function EditService() {
         }
       }
 
-      await updateService(id, { name, price, description, isActive, category: category as any, unit, imagePath: finalImagePath || undefined });
+      await updateService(id, { 
+        name, 
+        price, 
+        description, 
+        isActive, 
+        category: category as any, 
+        unit, 
+        imagePath: finalImagePath || undefined,
+        garmentItemIds: selectedGarmentIds 
+      });
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } catch (err) {
@@ -200,6 +218,48 @@ export default function EditService() {
                 </div>
               </div>
             </div>
+            
+            {/* Garments Section */}
+            <div className="pt-6 border-t border-gray-100 dark:border-white/5 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Linked Garments</label>
+                <p className="text-xs text-gray-500 mb-4 font-semibold">Select the items that should be available when a customer chooses this service.</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {allGarments.map(garment => {
+                    const isSelected = selectedGarmentIds.includes(garment.id);
+                    return (
+                      <label 
+                        key={garment.id}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setSelectedGarmentIds(prev => 
+                            prev.includes(garment.id) 
+                              ? prev.filter(id => id !== garment.id)
+                              : [...prev, garment.id]
+                          );
+                        }}
+                        className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                          isSelected 
+                            ? "border-brand-cobalt bg-brand-cobalt/5 dark:bg-brand-cobalt/10" 
+                            : "border-gray-200 dark:border-white/10 bg-white dark:bg-[#1f2937] hover:border-gray-300 dark:hover:border-white/20"
+                        }`}
+                      >
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors ${
+                          isSelected ? "bg-brand-cobalt border-brand-cobalt text-white" : "border-gray-300 dark:border-gray-600"
+                        }`}>
+                          {isSelected && <Check size={12} strokeWidth={3} />}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{garment.emoji}</span>
+                          <span className="text-sm font-bold text-gray-900 dark:text-white">{garment.name}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 

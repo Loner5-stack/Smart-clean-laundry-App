@@ -1,14 +1,17 @@
 "use client";
 
 import { Bell, Search, Plus } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export function AdminTopHeader() {
   return (
     <header className="h-16 bg-white dark:bg-[#111827] border-b border-gray-100 dark:border-white/5 flex items-center justify-between px-6 z-10 shrink-0 sticky top-0">
       {/* Global Search */}
       <div className="flex-1 max-w-md relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          size={16}
+        />
         <input
           type="text"
           placeholder="Search orders, customers, or riders..."
@@ -19,7 +22,7 @@ export function AdminTopHeader() {
       {/* Right Actions */}
       <div className="flex items-center gap-4">
         <ThemeToggle />
-        
+
         <button className="relative p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
           <Bell size={20} />
           {/* Notification Badge */}

@@ -3,11 +3,11 @@
 // src/components/auth/login-auth-layout.tsx
 import { BrandLogo } from "../brand-logo";
 import { useState } from "react";
-import { ThemeWrapper } from "../theme-wrapper";
-import { ThemeToggle } from "../theme-toggle";
+import { ThemeWrapper } from "../theme/theme-wrapper";
+import { ThemeToggle } from "../theme/theme-toggle";
 import { useMotionValue } from "framer-motion";
 import Image from "next/image";
-import { ThemeTransitionText } from "@/components/theme-transition-text";
+import { ThemeTransitionText } from "@/components/theme/theme-transition-text";
 import { AuthLayoutProvider } from "@/context/login-auth-layout-context";
 import { AuthLayoutInner } from "./login-AuthLayoutInner";
 import Link from "next/link";

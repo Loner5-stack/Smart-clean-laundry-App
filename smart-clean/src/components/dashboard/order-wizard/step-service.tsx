@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Check, Info } from "lucide-react";
-import { allServices } from "@/data/mock-dashboard";
 import type { OrderState } from "@/types/order-wizard";
+import { AdminService } from "@/data/mock-admin";
 
 function formatNaira(n: number) {
   return `$${n.toLocaleString("en-US")}`;
@@ -14,14 +14,15 @@ interface Props {
   order: OrderState;
   onChange: (patch: Partial<OrderState>) => void;
   onSelectService?: (index: number) => void;
+  services: AdminService[];
 }
 
-const standardServices = allServices.filter((s) => s.category === "standard");
-const premiumServices = allServices.filter((s) => s.category === "premium");
-
 export function StepService(props: Props) {
-  const { order, onChange } = props;
+  const { order, onChange, services } = props;
   const [activeInfo, setActiveInfo] = useState<string | null>(null);
+
+  const standardServices = services.filter((s) => s.category === "Standard");
+  const premiumServices = services.filter((s) => s.category === "Premium");
 
   useEffect(() => {
     const handleClickOutside = () => setActiveInfo(null);
@@ -48,7 +49,7 @@ export function StepService(props: Props) {
     }
   };
 
-  const renderCard = (service: (typeof allServices)[0]) => {
+  const renderCard = (service: AdminService) => {
     const isSelected = order.serviceIds.includes(service.id);
     return (
       <div
@@ -62,13 +63,19 @@ export function StepService(props: Props) {
       >
         {/* Thumbnail */}
         <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-gray-50 dark:bg-white/5">
-          <Image
-            src={service.imagePath}
-            alt={service.name}
-            fill
-            sizes="56px"
-            className="object-cover"
-          />
+          {service.imagePath ? (
+            <Image
+              src={service.imagePath}
+              alt={service.name}
+              fill
+              sizes="56px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-xl">
+              {"✨"}
+            </div>
+          )}
         </div>
 
         {/* Info */}
@@ -88,7 +95,7 @@ export function StepService(props: Props) {
               <Info size={14} />
             </button>
 
-            {service.category === "premium" && (
+            {service.category === "Premium" && (
               <span className="shrink-0 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-600 text-[9px] font-bold">
                 <Sparkles size={8} /> Premium
               </span>

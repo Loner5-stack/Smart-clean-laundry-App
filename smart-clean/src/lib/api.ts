@@ -18,6 +18,7 @@
  */
 
 import { auth } from "@/auth";
+import { revalidateTag } from "next/cache";
 
 import {
   mockAdminOrders,
@@ -48,7 +49,7 @@ import {
   type LoyaltyTier,
 } from "@/data/mock-shared";
 
-import { garmentItems, getItemsForService, timeSlots, PICKUP_FEE, stainTypes } from "@/data/order-wizard-data";
+import { type GarmentItem, garmentItems, getItemsForService, timeSlots, PICKUP_FEE, stainTypes } from "@/data/order-wizard-data";
 
 // ------------------------------------------------------------------
 // SECURE FETCH UTILITY
@@ -121,7 +122,7 @@ async function fetchFromAPI<T>(endpoint: string, options: RequestInit = {}): Pro
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
-    cache: 'no-store', // ensures fresh data for Server Actions
+    cache: options.cache || "no-store",
   });
 
   if (!response.ok) {
@@ -279,11 +280,17 @@ export async function getRiderById(id: string): Promise<AdminRider | null> {
 /** Fetch all services for the admin service catalogue. */
 export async function getServices(): Promise<AdminService[]> {
   // Using the new public endpoint
-  return fetchFromAPI<AdminService[]>("/services");
+  return fetchFromAPI<AdminService[]>("/services", {
+    cache: "force-cache",
+    next: { tags: ["services"] }
+  });
 }
 
 export async function getPopularServices(): Promise<AdminService[]> {
-  return fetchFromAPI<AdminService[]>("/services/popular");
+  return fetchFromAPI<AdminService[]>("/services/popular", {
+    cache: "force-cache",
+    next: { tags: ["services"] }
+  });
 }
 
 export async function getServiceById(id: string): Promise<AdminService> {
@@ -292,18 +299,24 @@ export async function getServiceById(id: string): Promise<AdminService> {
 
 /** Create a new service. */
 export async function createService(data: Partial<AdminService>): Promise<AdminService | null> {
-  return fetchFromAPI<AdminService>("/admin/services", {
+  const result = await fetchFromAPI<AdminService>("/admin/services", {
     method: "POST",
     body: JSON.stringify(data),
   });
+  // @ts-expect-error: Next 16 types issue
+  if (result) revalidateTag("services");
+  return result;
 }
 
 /** Update an existing service. */
 export async function updateService(id: string, data: Partial<AdminService>): Promise<AdminService | null> {
-  return fetchFromAPI<AdminService>(`/admin/services/${id}`, {
+  const result = await fetchFromAPI<AdminService>(`/admin/services/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
   });
+  // @ts-expect-error: Next 16 types issue
+  if (result) revalidateTag("services");
+  return result;
 }
 
 /** Reorder services. */
@@ -312,6 +325,8 @@ export async function reorderServices(items: { id: string; displayOrder: number 
     method: "PUT",
     body: JSON.stringify({ items }),
   });
+  // @ts-expect-error: Next 16 types issue
+  if (res) revalidateTag("services");
   return !!res;
 }
 
@@ -320,6 +335,8 @@ export async function deleteService(id: string): Promise<boolean> {
   const res = await fetchFromAPI<{ success: boolean }>(`/admin/services/${id}`, {
     method: "DELETE",
   });
+  // @ts-expect-error: Next 16 types issue
+  if (res) revalidateTag("services");
   return !!res;
 }
 
@@ -405,11 +422,43 @@ export async function getCustomerOrderById(id: string): Promise<Order | null> {
 
 /** 
  * Fetch garment items with pricing for the order wizard. 
- * // TODO: create /garments route on backend
  */
 export async function getGarmentItems(): Promise<typeof garmentItems> {
-  return fetchFromAPI<typeof garmentItems>("/garments");
+  return fetchFromAPI<typeof garmentItems>("/garments", {
+    cache: "force-cache",
+    next: { tags: ["garments"] }
+  });
 }
+
+/** Fetch all garments for the admin dashboard (including inactive). */
+export async function getAdminGarmentItems(): Promise<GarmentItem[]> {
+  return fetchFromAPI<GarmentItem[]>("/admin/garments", {
+    cache: "no-store"
+  });
+}
+
+/** Create a new garment. */
+export async function createGarment(data: Partial<GarmentItem>): Promise<GarmentItem | null> {
+  const result = await fetchFromAPI<GarmentItem>("/admin/garments", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  // @ts-expect-error: Next 16 types issue
+  if (result) revalidateTag("garments");
+  return result;
+}
+
+/** Update an existing garment. */
+export async function updateGarment(id: string, data: Partial<GarmentItem>): Promise<GarmentItem | null> {
+  const result = await fetchFromAPI<GarmentItem>(`/admin/garments/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  // @ts-expect-error: Next 16 types issue
+  if (result) revalidateTag("garments");
+  return result;
+}
+
 
 /**
  * Fetch the allowed garment items for a specific service ID.
@@ -418,7 +467,9 @@ export async function getGarmentItems(): Promise<typeof garmentItems> {
  */
 export async function getItemsForServiceId(serviceId: string): Promise<typeof garmentItems> {
   await simulateDelay();
-  return getItemsForService(serviceId);
+  const service = await getServiceById(serviceId);
+  const garments = await getGarmentItems();
+  return getItemsForService(service, garments);
 }
 
 /** 

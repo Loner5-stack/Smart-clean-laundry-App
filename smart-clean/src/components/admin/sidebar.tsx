@@ -2,21 +2,21 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  LayoutDashboard, 
-  ShoppingBag, 
-  Users, 
-  Settings, 
-  Database, 
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Users,
+  Settings,
+  Database,
   LogOut,
   Bike,
   Briefcase,
   CreditCard,
   Phone,
   Lock,
-  Repeat
+  Repeat,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { adminLogoutAction } from "@/app/actions/admin-logout";
 
 const NAV_SECTIONS = [
@@ -58,10 +58,12 @@ export function AdminSidebar() {
             </h3>
             <div className="space-y-1">
               {section.items.map(({ href, icon: Icon, label }) => {
-                const isActive = pathname === href || pathname.startsWith(`${href}/`);
+                const isActive =
+                  pathname === href || pathname.startsWith(`${href}/`);
                 // Special exception for /admin so it doesn't match everything
-                const isExact = href === "/admin" ? pathname === "/admin" : isActive;
-                
+                const isExact =
+                  href === "/admin" ? pathname === "/admin" : isActive;
+
                 return (
                   <Link
                     key={href}
@@ -72,7 +74,14 @@ export function AdminSidebar() {
                         : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
                     }`}
                   >
-                    <Icon size={18} className={isExact ? "text-white" : "text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors"} />
+                    <Icon
+                      size={18}
+                      className={
+                        isExact
+                          ? "text-white"
+                          : "text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors"
+                      }
+                    />
                     {label}
                   </Link>
                 );
@@ -94,15 +103,15 @@ export function AdminSidebar() {
           </div>
         </Link>
 
-        <form 
-          action={adminLogoutAction} 
+        <form
+          action={adminLogoutAction}
           className="w-full"
           onSubmit={() => {
             // Emit a storage event so other tabs immediately detect the logout
             localStorage.setItem("sc_admin_logout", Date.now().toString());
           }}
         >
-          <button 
+          <button
             type="submit"
             className="w-full flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white transition-colors"
           >

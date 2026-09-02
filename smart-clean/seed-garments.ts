@@ -1,19 +1,14 @@
-/**
- * Static data for the New Order Wizard.
- * Replace with API calls when backend is ready.
- */
+import { PrismaClient } from '@prisma/client';
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
+import "dotenv/config";
 
-// ── Garment Items ────────────────────────────────────────────────
-export interface GarmentItem {
-  id: string;
-  name: string;
-  emoji: string;
-  basePrice: number; // price per piece in Naira
-  unit: string;
-  isActive?: boolean;
-}
+const connectionString = process.env.DATABASE_URL;
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
-export const garmentItems: GarmentItem[] = [
+const garmentItems = [
   { id: "g-01", name: "Shirt",       emoji: "👔", basePrice: 1500, unit: "pc" },
   { id: "g-02", name: "T-Shirt",     emoji: "👕", basePrice: 1000, unit: "pc" },
   { id: "g-03", name: "Trouser",     emoji: "👖", basePrice: 1500, unit: "pc" },
@@ -39,40 +34,21 @@ export const garmentItems: GarmentItem[] = [
   { id: "g-23", name: "Handbag",     emoji: "👜", basePrice: 7000, unit: "pc" },
 ];
 
-import { AdminService } from "./mock-admin";
-
-export function getItemsForService(service: AdminService | undefined, availableGarments: GarmentItem[]): GarmentItem[] {
-  if (!service) return [];
-  
-  if (service.garmentItemIds && service.garmentItemIds.length > 0) {
-    return availableGarments.filter(item => service.garmentItemIds!.includes(item.id));
+async function main() {
+  for (const garment of garmentItems) {
+    await prisma.garmentItem.upsert({
+      where: { id: garment.id },
+      update: {},
+      create: {
+        id: garment.id,
+        name: garment.name,
+        emoji: garment.emoji,
+        basePrice: garment.basePrice,
+        unit: garment.unit,
+      },
+    });
   }
-  
-  return availableGarments;
-}
-// ── Time Slots ───────────────────────────────────────────────────
-export interface TimeSlot {
-  id: string;
-  label: string;
-  range: string;
+  console.log("Seeded garments.");
 }
 
-export const timeSlots: TimeSlot[] = [
-  { id: "ts-1", label: "Morning",   range: "8:00 AM – 12:00 PM" },
-  { id: "ts-2", label: "Afternoon", range: "12:00 PM – 4:00 PM" },
-];
-
-// ── Pickup fee ───────────────────────────────────────────────────
-export const PICKUP_FEE = 500;
-
-// ── Stain Types ──────────────────────────────────────────────────
-export const stainTypes = [
-  "Coffee / Tea",
-  "Oil / Grease",
-  "Ink / Pen",
-  "Blood",
-  "Wine / Juice",
-  "Sweat",
-  "Mud / Dirt",
-  "Other",
-];
+main().catch(console.error).finally(() => prisma.$disconnect());

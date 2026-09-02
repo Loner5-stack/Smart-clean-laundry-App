@@ -9,6 +9,7 @@ export async function catalogRoutes(server: FastifyInstance) {
     const services = await server.prisma.service.findMany({
       where: { isActive: true, isArchived: false },
       orderBy: { displayOrder: "asc" },
+      include: { garmentItems: { select: { id: true } } }
     });
     
     const mappedServices = services.map(s => ({
@@ -22,6 +23,7 @@ export async function catalogRoutes(server: FastifyInstance) {
       imagePath: s.imagePath,
       displayOrder: s.displayOrder,
       isPopular: s.isPopular,
+      garmentItemIds: s.garmentItems.map(g => g.id),
     }));
 
     return reply.send(mappedServices);
@@ -35,6 +37,7 @@ export async function catalogRoutes(server: FastifyInstance) {
     const services = await server.prisma.service.findMany({
       where: { isActive: true, isPopular: true, isArchived: false },
       orderBy: { displayOrder: "asc" },
+      include: { garmentItems: { select: { id: true } } }
     });
     
     const mappedServices = services.map(s => ({
@@ -48,6 +51,7 @@ export async function catalogRoutes(server: FastifyInstance) {
       imagePath: s.imagePath,
       displayOrder: s.displayOrder,
       isPopular: s.isPopular,
+      garmentItemIds: s.garmentItems.map(g => g.id),
     }));
 
     return reply.send(mappedServices);

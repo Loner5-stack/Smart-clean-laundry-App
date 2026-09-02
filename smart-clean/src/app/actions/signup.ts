@@ -82,10 +82,10 @@ export async function signupAction(formData: FormData): Promise<SignupResult> {
         },
       });
     });
-
-    return { success: true };
   } catch (error) {
     console.error("Signup Action Error:", error);
     return { success: false, error: error instanceof Error ? error.message : "An unexpected server error occurred." };
   }
+
+  return { success: true };
 }

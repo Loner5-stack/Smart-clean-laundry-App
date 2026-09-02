@@ -471,6 +471,7 @@ export async function adminRoutes(server: FastifyInstance) {
       const services = await server.prisma.service.findMany({
         where: { isArchived: false },
         orderBy: { displayOrder: "asc" },
+        include: { garmentItems: { select: { id: true } } }
       });
       
       const mappedServices = services.map(s => ({
@@ -484,6 +485,7 @@ export async function adminRoutes(server: FastifyInstance) {
         imagePath: s.imagePath,
         displayOrder: s.displayOrder,
         isPopular: s.isPopular,
+        garmentItemIds: s.garmentItems.map(g => g.id),
         orderCount: 0 // Mocked for now until order items schema relates to services
       }));
 
@@ -506,7 +508,10 @@ export async function adminRoutes(server: FastifyInstance) {
         unit: string;
         description: string;
         imagePath?: string;
+        garmentItemIds?: string[];
       };
+
+      console.log("POST /admin/services RECEIVED BODY:", body);
 
       // Generate ID in format svc-X optimally
       let maxNum = 0;
@@ -521,7 +526,7 @@ export async function adminRoutes(server: FastifyInstance) {
           maxNum = Number(result[0].max_num);
         }
       } catch (e) {
-        request.log.warn("Failed to generate optimized ID, falling back to simple count", e);
+        request.log.warn({ err: e }, "Failed to generate optimized ID, falling back to simple count");
         maxNum = await server.prisma.service.count();
       }
       const newId = `svc-${maxNum + 1}`;
@@ -536,6 +541,7 @@ export async function adminRoutes(server: FastifyInstance) {
           description: body.description || "",
           imagePath: body.imagePath || null,
           isPopular: false,
+          garmentItems: body.garmentItemIds?.length ? { connect: body.garmentItemIds.map(id => ({ id })) } : undefined,
         },
       });
 
@@ -557,12 +563,14 @@ export async function adminRoutes(server: FastifyInstance) {
       const { id } = request.params as { id: string };
       const service = await server.prisma.service.findUnique({
         where: { id },
+        include: { garmentItems: { select: { id: true } } }
       });
       if (!service) return reply.status(404).send({ error: "Service not found" });
 
       return reply.send({
         ...service,
-        price: Number(service.price)
+        price: Number(service.price),
+        garmentItemIds: service.garmentItems.map(g => g.id),
       });
     }
   );
@@ -585,6 +593,7 @@ export async function adminRoutes(server: FastifyInstance) {
         isActive: boolean;
         imagePath?: string;
         isPopular?: boolean;
+        garmentItemIds?: string[];
       };
 
       const updatedService = await server.prisma.service.update({
@@ -596,8 +605,9 @@ export async function adminRoutes(server: FastifyInstance) {
           unit: body.unit,
           description: body.description,
           isActive: body.isActive,
-          imagePath: body.imagePath,
-          isPopular: body.isPopular,
+          ...(body.imagePath !== undefined && { imagePath: body.imagePath }),
+          ...(body.isPopular !== undefined && { isPopular: body.isPopular }),
+          ...(body.garmentItemIds && { garmentItems: { set: body.garmentItemIds.map(id => ({ id })) } }),
         },
       });
 
@@ -714,6 +724,41 @@ export async function adminRoutes(server: FastifyInstance) {
       return reply.status(201).send({
         ...newGarment,
         basePrice: Number(newGarment.basePrice),
+      });
+    }
+  );
+
+  /**
+   * PUT /api/admin/garments/:id
+   * Update an existing garment item.
+   */
+  server.put(
+    "/api/admin/garments/:id",
+    { preHandler: [verifyAuth, requireRole("ADMIN")] },
+    async (request, reply) => {
+      const { id } = request.params as { id: string };
+      const body = request.body as {
+        name?: string;
+        emoji?: string;
+        basePrice?: number;
+        unit?: string;
+        isActive?: boolean;
+      };
+
+      const updatedGarment = await server.prisma.garmentItem.update({
+        where: { id },
+        data: {
+          ...(body.name !== undefined && { name: body.name }),
+          ...(body.emoji !== undefined && { emoji: body.emoji }),
+          ...(body.basePrice !== undefined && { basePrice: body.basePrice }),
+          ...(body.unit !== undefined && { unit: body.unit }),
+          ...(body.isActive !== undefined && { isActive: body.isActive }),
+        },
+      });
+
+      return reply.send({
+        ...updatedGarment,
+        basePrice: Number(updatedGarment.basePrice),
       });
     }
   );

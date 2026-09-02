@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, Mail, Lock, ArrowRight, Bike } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export default function RiderLogin() {
   const router = useRouter();
@@ -51,7 +51,10 @@ export default function RiderLogin() {
           <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border-2 border-white dark:border-white/10 rounded-3xl p-8 shadow-2xl shadow-gray-200/50 dark:shadow-none hover:-translate-y-2 hover:border-brand-cobalt/20 dark:hover:border-brand-cobalt/30 hover:shadow-3xl hover:shadow-brand-cobalt/10 dark:hover:shadow-brand-cobalt/10 transition-all duration-300 ease-out">
             <div className="mb-8 text-center">
               <div className="w-16 h-16 bg-gray-100 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200 dark:border-white/10">
-                <LockKeyhole size={32} className="text-gray-900 dark:text-white" />
+                <LockKeyhole
+                  size={32}
+                  className="text-gray-900 dark:text-white"
+                />
               </div>
               <h1 className="text-2xl font-black text-gray-900 dark:text-white">
                 Rider Authentication
@@ -75,7 +78,9 @@ export default function RiderLogin() {
                     type="email"
                     required
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     className="w-full py-3.5 pl-11 pr-4 rounded-xl bg-white/50 dark:bg-black/10 backdrop-blur-md border border-gray-200 dark:border-white/10 focus:border-brand-cobalt focus:ring-4 focus:ring-brand-cobalt/20 outline-none transition-all duration-300 text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-gray-600 shadow-sm"
                     placeholder="rider@smartclean.com"
                   />
@@ -97,7 +102,9 @@ export default function RiderLogin() {
                     type="password"
                     required
                     value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
                     className="w-full py-3.5 pl-11 pr-4 rounded-xl bg-white/50 dark:bg-black/10 backdrop-blur-md border border-gray-200 dark:border-white/10 focus:border-brand-cobalt focus:ring-4 focus:ring-brand-cobalt/20 outline-none transition-all duration-300 text-gray-900 dark:text-white font-medium placeholder:text-gray-400 dark:placeholder:text-gray-600 shadow-sm"
                     placeholder="••••••••"
                   />
@@ -114,7 +121,10 @@ export default function RiderLogin() {
                 ) : (
                   <>
                     <span>Authenticate</span>
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight
+                      size={18}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
                   </>
                 )}
                 {/* Shine effect */}

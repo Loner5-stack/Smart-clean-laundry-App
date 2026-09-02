@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { MapPin, Check, Calendar, Home, PenLine } from "lucide-react";
 import { timeSlots } from "@/data/order-wizard-data";
-import { mockUser } from "@/data/mock-dashboard";
 import type { OrderState } from "@/types/order-wizard";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -11,6 +10,7 @@ import { format, parseISO } from "date-fns";
 interface Props {
   order: OrderState;
   onChange: (patch: Partial<OrderState>) => void;
+  userAddress: string;
 }
 
 /** Returns array of available date strings starting from tomorrow */
@@ -36,9 +36,9 @@ function getAvailableDates(count = 7): { label: string; value: string }[] {
   return dates;
 }
 
-export function StepLocation({ order, onChange }: Props) {
+export function StepLocation({ order, onChange, userAddress }: Props) {
   const availableDates = getAvailableDates(7);
-  const homeAddress = mockUser.homeAddress;
+  const homeAddress = userAddress || "No address on profile";
   const isUsingHomeAddress = order.pickupAddress === homeAddress;
 
   // Auto-select the user's home address and tomorrow's date when the step first loads

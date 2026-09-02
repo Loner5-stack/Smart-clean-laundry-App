@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Search, Bell, Package } from "lucide-react";
 import { mockUser } from "@/data/mock-dashboard";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { GooeyInput } from "@/components/ui/gooey-input";
@@ -15,16 +15,21 @@ export function TopHeader() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  if (pathname.startsWith("/dashboard/orders/new") || pathname.startsWith("/dashboard/orders/confirmed")) {
+  if (
+    pathname.startsWith("/dashboard/orders/new") ||
+    pathname.startsWith("/dashboard/orders/confirmed")
+  ) {
     return null;
   }
 
-  const filteredServices = allServices.filter(service => 
-    service.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    service.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredServices = allServices.filter(
+    (service) =>
+      service.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const shouldShowSearch = pathname === "/dashboard" || pathname === "/dashboard/services";
+  const shouldShowSearch =
+    pathname === "/dashboard" || pathname === "/dashboard/services";
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between px-4 md:px-6 py-3.5 bg-white dark:bg-[#090B11] border-b border-gray-100 dark:border-white/5">
@@ -32,12 +37,12 @@ export function TopHeader() {
       <div className="relative flex-1 max-w-xs md:max-w-sm h-10 z-50">
         {shouldShowSearch && (
           <>
-            <GooeyInput 
-              placeholder="Search services..." 
+            <GooeyInput
+              placeholder="Search services..."
               onOpenChange={setIsSearchOpen}
               onValueChange={setSearchQuery}
             />
-            
+
             <AnimatePresence>
               {isSearchOpen && (
                 <motion.div
@@ -53,12 +58,14 @@ export function TopHeader() {
                         <p className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                           Suggested Services
                         </p>
-                        {filteredServices.map(service => (
+                        {filteredServices.map((service) => (
                           <button
                             key={service.id}
                             onMouseDown={(e) => {
                               e.preventDefault(); // prevent input blur
-                              router.push(`/dashboard/orders/new?service=${service.id}`);
+                              router.push(
+                                `/dashboard/orders/new?service=${service.id}`,
+                              );
                               setIsSearchOpen(false);
                             }}
                             className="w-full flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors text-left"
@@ -85,8 +92,12 @@ export function TopHeader() {
                       </>
                     ) : (
                       <div className="p-4 text-center">
-                        <p className="text-sm font-semibold text-gray-900 dark:text-white">No services found</p>
-                        <p className="text-xs text-gray-500 mt-1">Try a different search term</p>
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                          No services found
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Try a different search term
+                        </p>
                       </div>
                     )}
                   </div>

@@ -18,7 +18,7 @@ export default async function OnboardingPage() {
   }
 
   // If user has already completed onboarding, redirect them
-  // @ts-expect-error
+  // @ts-expect-error to detect if onboardingComplete is true, we need to check the session object
   if (session?.user?.onboardingComplete) {
     redirect("/dashboard");
   }

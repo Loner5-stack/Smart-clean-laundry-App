@@ -1,27 +1,33 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Users, 
-  Settings, 
-  Database, 
+import {
+  Users,
+  Settings,
+  Database,
   Briefcase,
   CreditCard,
   LogOut,
-  ArrowLeft
+  ArrowLeft,
+  Shirt,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 const TECH_SECTIONS = [
   {
     title: "TECHNICAL (RESTRICTED)",
     items: [
       { href: "/admin/customers", icon: Users, label: "Customers" },
-      { href: "/admin/subscriptions", icon: CreditCard, label: "Subscriptions" },
+      {
+        href: "/admin/subscriptions",
+        icon: CreditCard,
+        label: "Subscriptions",
+      },
       { href: "/admin/services", icon: Briefcase, label: "Services" },
+      { href: "/admin/garments", icon: Shirt, label: "Garments" },
       { href: "/admin/settings", icon: Settings, label: "Settings" },
     ],
-  }
+  },
 ];
 
 export function TechSidebar() {
@@ -50,8 +56,9 @@ export function TechSidebar() {
             </h3>
             <div className="space-y-1">
               {section.items.map(({ href, icon: Icon, label }) => {
-                const isActive = pathname === href || pathname.startsWith(`${href}/`);
-                
+                const isActive =
+                  pathname === href || pathname.startsWith(`${href}/`);
+
                 return (
                   <Link
                     key={href}
@@ -62,7 +69,14 @@ export function TechSidebar() {
                         : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white"
                     }`}
                   >
-                    <Icon size={18} className={isActive ? "text-white" : "text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors"} />
+                    <Icon
+                      size={18}
+                      className={
+                        isActive
+                          ? "text-white"
+                          : "text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors"
+                      }
+                    />
                     {label}
                   </Link>
                 );
@@ -74,15 +88,18 @@ export function TechSidebar() {
 
       {/* Footer Area */}
       <div className="p-4 border-t border-gray-200 dark:border-white/10 shrink-0 space-y-2">
-        <Link 
+        <Link
           href="/admin"
           className="w-full flex items-center gap-3 px-3 py-3 rounded-xl font-bold text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-white transition-colors"
         >
-          <ArrowLeft size={18} className="text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" />
+          <ArrowLeft
+            size={18}
+            className="text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+          />
           Back to Operations
         </Link>
-        
-        <button 
+
+        <button
           onClick={() => {
             sessionStorage.removeItem("tech_passkey_verified");
             sessionStorage.removeItem("tech_passkey");

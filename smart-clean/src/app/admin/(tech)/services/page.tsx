@@ -32,13 +32,16 @@ export default function AdminServices() {
   }, []);
 
   const handleCreateService = async () => {
+    console.log("handleCreateService called with:", newServiceForm);
     setIsCreating(true);
     try {
       let finalImagePath = null;
       if (newServiceForm.imageFile) {
+        console.log("Uploading image...");
         const formData = new FormData();
         formData.append("image", newServiceForm.imageFile);
         const uploadRes = await uploadImageAction(formData);
+        console.log("Upload response:", uploadRes);
         if (uploadRes.success) {
           finalImagePath = uploadRes.filePath;
         } else {
@@ -47,6 +50,8 @@ export default function AdminServices() {
           return;
         }
       }
+
+      console.log("Final image path to save:", finalImagePath);
 
       const newService = await createService({
         name: newServiceForm.name,
@@ -283,13 +288,13 @@ export default function AdminServices() {
               <div className="p-5 space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1.5">Service Name</label>
-                  <input type="text" placeholder="e.g. Shoe Cleaning" value={newServiceForm.name} onChange={(e) => setNewServiceForm({...newServiceForm, name: e.target.value})} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-cobalt" />
+                  <input type="text" placeholder="e.g. Shoe Cleaning" value={newServiceForm.name} onChange={(e) => setNewServiceForm(prev => ({...prev, name: e.target.value}))} className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-cobalt" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 mb-1.5">Category</label>
                   <CustomSelect
                     value={newServiceForm.category}
-                    onChange={(val) => setNewServiceForm({...newServiceForm, category: val})}
+                    onChange={(val) => setNewServiceForm(prev => ({...prev, category: val as string}))}
                     options={[
                       { value: "Standard", label: "Standard" },
                       { value: "Premium", label: "Premium" }
@@ -303,7 +308,7 @@ export default function AdminServices() {
                     accept="image/*"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) setNewServiceForm({...newServiceForm, imageFile: file});
+                      if (file) setNewServiceForm(prev => ({...prev, imageFile: file}));
                     }}
                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-brand-cobalt/10 file:text-brand-cobalt hover:file:bg-brand-cobalt/20 transition-all cursor-pointer" 
                   />

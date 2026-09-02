@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { LockKeyhole, Lock, ArrowRight, Database } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { adminLoginAction } from "@/app/actions/admin-login";
 
 export default function AdminLogin() {
@@ -68,7 +68,10 @@ export default function AdminLogin() {
           <div className="bg-white/80 dark:bg-white/5 backdrop-blur-xl border-2 border-white dark:border-white/10 rounded-3xl p-8 shadow-2xl shadow-gray-200/50 dark:shadow-none hover:-translate-y-2 hover:border-brand-cobalt/20 dark:hover:border-brand-cobalt/30 hover:shadow-3xl hover:shadow-brand-cobalt/10 dark:hover:shadow-brand-cobalt/10 transition-all duration-300 ease-out">
             <div className="mb-8 text-center">
               <div className="w-16 h-16 bg-gray-100 dark:bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-200 dark:border-white/10">
-                <LockKeyhole size={32} className="text-gray-900 dark:text-white" />
+                <LockKeyhole
+                  size={32}
+                  className="text-gray-900 dark:text-white"
+                />
               </div>
               <h1 className="text-2xl font-black text-gray-900 dark:text-white">
                 Admin Authentication
@@ -122,7 +125,10 @@ export default function AdminLogin() {
                 ) : (
                   <>
                     <span>Authenticate</span>
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight
+                      size={18}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
                   </>
                 )}
                 {/* Shine effect */}

@@ -1,5 +1,5 @@
 import { RiderBottomNav } from "@/components/rider/bottom-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 
 export const metadata = {
   title: "Rider Portal | Smart-Clean",
@@ -20,7 +20,9 @@ export default function RiderLayout({
             <span className="text-brand-cobalt font-bold text-xs">JD</span>
           </div>
           <div>
-            <p className="text-xs font-bold text-gray-900 dark:text-white">John Doe</p>
+            <p className="text-xs font-bold text-gray-900 dark:text-white">
+              John Doe
+            </p>
             <p className="text-[10px] text-emerald-500 font-semibold flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Active

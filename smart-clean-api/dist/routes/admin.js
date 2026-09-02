@@ -11,14 +11,69 @@ async function adminRoutes(server) {
      * GET /api/admin/orders
      * Returns all orders in the system with customer and rider info.
      */
-    server.get("/api/admin/orders", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (_request, reply) => {
-        const orders = await server.prisma.order.findMany({
-            include: {
-                customer: { select: { id: true, name: true, email: true, phone: true, address: true } },
-                rider: { select: { id: true, user: { select: { name: true } } } },
-            },
-            orderBy: { createdAt: "desc" },
-        });
+    server.get("/api/admin/orders", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (request, reply) => {
+        const { page = "1", limit = "50", search = "", status = "", dateFilter = "All Time", unassignedOnly = "false", todayOnly = "false" } = request.query;
+        const pageNum = parseInt(page, 10) || 1;
+        const limitNum = parseInt(limit, 10) || 50;
+        const skip = (pageNum - 1) * limitNum;
+        const where = {};
+        if (status && status !== "All Statuses" && status !== "all") {
+            where.status = status;
+        }
+        if (search) {
+            where.OR = [
+                { orderNumber: { contains: search, mode: "insensitive" } },
+                { customer: { name: { contains: search, mode: "insensitive" } } }
+            ];
+        }
+        if (unassignedOnly === "true") {
+            where.riderId = null;
+        }
+        const today = new Date();
+        if (dateFilter !== "All Time") {
+            if (dateFilter === "Today") {
+                const start = new Date(today.setHours(0, 0, 0, 0));
+                const end = new Date(today.setHours(23, 59, 59, 999));
+                where.createdAt = { gte: start, lte: end };
+            }
+            else if (dateFilter === "Yesterday") {
+                const yesterday = new Date(today);
+                yesterday.setDate(yesterday.getDate() - 1);
+                const start = new Date(yesterday.setHours(0, 0, 0, 0));
+                const end = new Date(yesterday.setHours(23, 59, 59, 999));
+                where.createdAt = { gte: start, lte: end };
+            }
+            else if (dateFilter === "Last 7 Days") {
+                const last7 = new Date(today);
+                last7.setDate(last7.getDate() - 7);
+                where.createdAt = { gte: last7 };
+            }
+            else if (dateFilter === "Last 30 Days") {
+                const last30 = new Date(today);
+                last30.setDate(last30.getDate() - 30);
+                where.createdAt = { gte: last30 };
+            }
+        }
+        if (todayOnly === "true") {
+            const todayStr = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+            where.pickupDetails = {
+                path: ['date'],
+                string_contains: todayStr
+            };
+        }
+        const [orders, total] = await Promise.all([
+            server.prisma.order.findMany({
+                where,
+                include: {
+                    customer: { select: { id: true, name: true, email: true, phone: true, address: true } },
+                    rider: { select: { id: true, user: { select: { name: true } } } },
+                },
+                orderBy: { createdAt: "desc" },
+                skip,
+                take: limitNum,
+            }),
+            server.prisma.order.count({ where })
+        ]);
         const mappedOrders = orders.map(o => {
             const items = Array.isArray(o.items) ? o.items : [];
             const pickupDetails = typeof o.pickupDetails === 'object' && o.pickupDetails !== null ? o.pickupDetails : {};
@@ -41,7 +96,15 @@ async function adminRoutes(server) {
                 notes: []
             };
         });
-        return reply.send(mappedOrders);
+        return reply.send({
+            data: mappedOrders,
+            meta: {
+                total,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(total / limitNum)
+            }
+        });
     });
     /**
      * PATCH /api/admin/orders/:id
@@ -108,32 +171,79 @@ async function adminRoutes(server) {
      * GET /api/admin/users
      * Returns all customers.
      */
-    server.get("/api/admin/users", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN"), auth_1.requireTechPasskey] }, async (_request, reply) => {
-        const users = await server.prisma.user.findMany({
-            where: { role: "CUSTOMER" },
-            include: {
-                orders: {
-                    select: { totalAmount: true, createdAt: true },
-                    orderBy: { createdAt: "desc" }
+    server.get("/api/admin/users", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (request, reply) => {
+        const { page = "1", limit = "50", search = "" } = request.query;
+        const pageNum = parseInt(page, 10) || 1;
+        const limitNum = parseInt(limit, 10) || 50;
+        const skip = (pageNum - 1) * limitNum;
+        const where = { role: "CUSTOMER" };
+        if (search) {
+            where.OR = [
+                { name: { contains: search, mode: "insensitive" } },
+                { email: { contains: search, mode: "insensitive" } },
+                { phone: { contains: search, mode: "insensitive" } }
+            ];
+        }
+        const [users, total, tiers] = await Promise.all([
+            server.prisma.user.findMany({
+                where,
+                include: {
+                    orders: {
+                        select: { totalAmount: true, createdAt: true },
+                        orderBy: { createdAt: "desc" }
+                    },
+                    subscriptions: {
+                        where: { status: "ACTIVE" },
+                        include: { plan: true },
+                        take: 1
+                    }
                 },
-                subscriptions: {
-                    where: { status: "ACTIVE" },
-                    include: { plan: true },
-                    take: 1
-                }
-            },
-            orderBy: { createdAt: "desc" },
-        });
+                orderBy: { createdAt: "desc" },
+                skip,
+                take: limitNum,
+            }),
+            server.prisma.user.count({ where }),
+            server.prisma.tierSetting.findMany({ orderBy: { minOrders: "asc" } })
+        ]);
         const mappedCustomers = users.map(user => {
             const totalOrders = user.orders.length;
             const totalSpend = user.orders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
-            let loyaltyTier = "Tier 1";
-            if (totalOrders > 30)
-                loyaltyTier = "Tier 3";
-            else if (totalOrders > 10)
-                loyaltyTier = "Tier 2";
+            let loyaltyTier = null;
+            let ordersToNextTier = null;
+            if (tiers && tiers.length > 0) {
+                // Find the highest tier the user qualifies for
+                let currentTierIndex = -1;
+                for (let i = tiers.length - 1; i >= 0; i--) {
+                    if (totalOrders >= tiers[i].minOrders) {
+                        currentTierIndex = i;
+                        loyaltyTier = tiers[i].name;
+                        break;
+                    }
+                }
+                if (currentTierIndex === -1 && tiers.length > 0) {
+                    // User hasn't even hit the lowest tier? Default to lowest.
+                    loyaltyTier = tiers[0].name;
+                    ordersToNextTier = tiers[0].minOrders - totalOrders;
+                    if (ordersToNextTier < 0)
+                        ordersToNextTier = 0;
+                }
+                else if (currentTierIndex < tiers.length - 1) {
+                    // Has a next tier
+                    ordersToNextTier = tiers[currentTierIndex + 1].minOrders - totalOrders;
+                }
+                else {
+                    // Max tier
+                    ordersToNextTier = 0;
+                }
+            }
+            else {
+                // No fallback - if no tiers exist, return null
+                loyaltyTier = null;
+                ordersToNextTier = null;
+            }
             return {
                 id: user.id,
+                customerNumber: user.customerNumber,
                 name: user.name || "Unknown",
                 email: user.email || "No Email",
                 phone: user.phone || "No Phone",
@@ -144,10 +254,122 @@ async function adminRoutes(server) {
                 lastOrderDate: user.orders[0]?.createdAt.toISOString() || new Date(0).toISOString(),
                 memberSince: user.createdAt.toISOString(),
                 status: "Active", // Or derived from metadata
-                activeSubscription: user.subscriptions[0]?.plan?.name || null
+                activeSubscription: user.subscriptions[0]?.plan?.name || null,
+                ordersToNextTier: ordersToNextTier
             };
         });
-        return reply.send(mappedCustomers);
+        return reply.send({
+            data: mappedCustomers,
+            meta: {
+                total,
+                page: pageNum,
+                limit: limitNum,
+                totalPages: Math.ceil(total / limitNum)
+            }
+        });
+    });
+    /**
+     * GET /api/admin/users/:id
+     * Returns a specific customer with their recent orders and subscriptions.
+     */
+    server.get("/api/admin/users/:id", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (request, reply) => {
+        const { id } = request.params;
+        const [user, tiers] = await Promise.all([
+            server.prisma.user.findUnique({
+                where: { id },
+                include: {
+                    orders: {
+                        orderBy: { createdAt: "desc" },
+                        include: {
+                            rider: { select: { id: true, user: { select: { name: true } } } }
+                        }
+                    },
+                    subscriptions: {
+                        where: { status: "ACTIVE" },
+                        include: { plan: true },
+                        take: 1
+                    }
+                }
+            }),
+            server.prisma.tierSetting.findMany({ orderBy: { minOrders: "asc" } })
+        ]);
+        if (!user) {
+            return reply.status(404).send({ error: "Customer not found" });
+        }
+        const totalOrders = user.orders.length;
+        const totalSpend = user.orders.reduce((sum, order) => sum + Number(order.totalAmount), 0);
+        let loyaltyTier = null;
+        let ordersToNextTier = null;
+        if (tiers && tiers.length > 0) {
+            // Find the highest tier the user qualifies for
+            let currentTierIndex = -1;
+            for (let i = tiers.length - 1; i >= 0; i--) {
+                if (totalOrders >= tiers[i].minOrders) {
+                    currentTierIndex = i;
+                    loyaltyTier = tiers[i].name;
+                    break;
+                }
+            }
+            if (currentTierIndex === -1 && tiers.length > 0) {
+                loyaltyTier = tiers[0].name;
+                ordersToNextTier = tiers[0].minOrders - totalOrders;
+                if (ordersToNextTier < 0)
+                    ordersToNextTier = 0;
+            }
+            else if (currentTierIndex < tiers.length - 1) {
+                ordersToNextTier = tiers[currentTierIndex + 1].minOrders - totalOrders;
+            }
+            else {
+                ordersToNextTier = 0;
+            }
+        }
+        else {
+            // No fallback
+            loyaltyTier = null;
+            ordersToNextTier = null;
+        }
+        const customerProfile = {
+            id: user.id,
+            customerNumber: user.customerNumber,
+            name: user.name || "Unknown",
+            email: user.email || "No Email",
+            phone: user.phone || "No Phone",
+            address: user.address || "No Address",
+            totalOrders: totalOrders,
+            totalSpend: totalSpend,
+            loyaltyTier: loyaltyTier,
+            lastOrderDate: user.orders[0]?.createdAt.toISOString() || new Date(0).toISOString(),
+            memberSince: user.createdAt.toISOString(),
+            status: "Active", // Or derived from metadata
+            activeSubscription: user.subscriptions[0]?.plan?.name || null,
+            ordersToNextTier: ordersToNextTier
+        };
+        const recentOrders = user.orders.map(o => {
+            const items = Array.isArray(o.items) ? o.items : [];
+            const pickupDetails = typeof o.pickupDetails === 'object' && o.pickupDetails !== null ? o.pickupDetails : {};
+            return {
+                id: o.orderNumber,
+                customerName: user.name || "Unknown",
+                customerPhone: user.phone || "Unknown",
+                customerAddress: user.address || "Unknown",
+                services: items.map((i) => i.name),
+                status: o.status,
+                rider: o.rider?.user?.name || null,
+                pickupDate: pickupDetails.date || "Unknown",
+                pickupTimeSlot: pickupDetails.timeSlot || "Unknown",
+                totalAmount: Number(o.totalAmount),
+                placedAt: o.createdAt.toISOString(),
+                paymentStatus: o.paymentStatus,
+                paymentMethod: o.paymentMethod || "Card",
+                items: items,
+                bagSelections: [],
+                notes: []
+            };
+        });
+        return reply.send({
+            customer: customerProfile,
+            recentOrders: recentOrders
+        });
     });
     /**
      * GET /api/admin/riders
@@ -185,7 +407,9 @@ async function adminRoutes(server) {
      */
     server.get("/api/admin/services", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (_request, reply) => {
         const services = await server.prisma.service.findMany({
-            orderBy: { createdAt: "desc" },
+            where: { isArchived: false },
+            orderBy: { displayOrder: "asc" },
+            include: { garmentItems: { select: { id: true } } }
         });
         const mappedServices = services.map(s => ({
             id: s.id,
@@ -195,6 +419,10 @@ async function adminRoutes(server) {
             unit: s.unit,
             description: s.description,
             isActive: s.isActive,
+            imagePath: s.imagePath,
+            displayOrder: s.displayOrder,
+            isPopular: s.isPopular,
+            garmentItemIds: s.garmentItems.map(g => g.id),
             orderCount: 0 // Mocked for now until order items schema relates to services
         }));
         return reply.send(mappedServices);
@@ -205,13 +433,36 @@ async function adminRoutes(server) {
      */
     server.post("/api/admin/services", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (request, reply) => {
         const body = request.body;
+        console.log("POST /admin/services RECEIVED BODY:", body);
+        // Generate ID in format svc-X optimally
+        let maxNum = 0;
+        try {
+            // Query the max number natively in Postgres
+            const result = await server.prisma.$queryRawUnsafe(`
+          SELECT MAX(CAST(SUBSTRING(id FROM 5) AS INTEGER)) as max_num 
+          FROM "Service" 
+          WHERE id LIKE 'svc-%' AND id ~ '^svc-[0-9]+$'
+        `);
+            if (result && result.length > 0 && result[0].max_num) {
+                maxNum = Number(result[0].max_num);
+            }
+        }
+        catch (e) {
+            request.log.warn({ err: e }, "Failed to generate optimized ID, falling back to simple count");
+            maxNum = await server.prisma.service.count();
+        }
+        const newId = `svc-${maxNum + 1}`;
         const newService = await server.prisma.service.create({
             data: {
+                id: newId,
                 name: body.name || "New Service",
                 category: body.category || "Standard",
                 price: body.price || 0,
                 unit: body.unit || "per item",
                 description: body.description || "",
+                imagePath: body.imagePath || null,
+                isPopular: false,
+                garmentItems: body.garmentItemIds?.length ? { connect: body.garmentItemIds.map(id => ({ id })) } : undefined,
             },
         });
         return reply.status(201).send({
@@ -227,12 +478,14 @@ async function adminRoutes(server) {
         const { id } = request.params;
         const service = await server.prisma.service.findUnique({
             where: { id },
+            include: { garmentItems: { select: { id: true } } }
         });
         if (!service)
             return reply.status(404).send({ error: "Service not found" });
         return reply.send({
             ...service,
-            price: Number(service.price)
+            price: Number(service.price),
+            garmentItemIds: service.garmentItems.map(g => g.id),
         });
     });
     /**
@@ -251,12 +504,54 @@ async function adminRoutes(server) {
                 unit: body.unit,
                 description: body.description,
                 isActive: body.isActive,
+                ...(body.imagePath !== undefined && { imagePath: body.imagePath }),
+                ...(body.isPopular !== undefined && { isPopular: body.isPopular }),
+                ...(body.garmentItemIds && { garmentItems: { set: body.garmentItemIds.map(id => ({ id })) } }),
             },
         });
         return reply.send({
             ...updatedService,
             price: Number(updatedService.price),
         });
+    });
+    /**
+     * DELETE /api/admin/services/:id
+     * Delete a service
+     */
+    server.delete("/api/admin/services/:id", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (request, reply) => {
+        try {
+            const { id } = request.params;
+            await server.prisma.service.update({
+                where: { id },
+                data: { isArchived: true, isActive: false },
+            });
+            return reply.send({ success: true });
+        }
+        catch (err) {
+            request.log.error(err);
+            return reply.status(500).send({ error: "Failed to delete service", details: err.message });
+        }
+    });
+    /**
+     * PUT /api/admin/services/reorder
+     * Bulk update service display orders
+     */
+    server.put("/api/admin/services/reorder", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (request, reply) => {
+        try {
+            const { items } = request.body;
+            if (!items || !Array.isArray(items)) {
+                return reply.status(400).send({ error: "Invalid payload" });
+            }
+            await Promise.all(items.map((item) => server.prisma.service.update({
+                where: { id: item.id },
+                data: { displayOrder: item.displayOrder },
+            })));
+            return reply.send({ success: true });
+        }
+        catch (err) {
+            request.log.error(err);
+            return reply.status(500).send({ error: "Internal Server Error", details: err.message });
+        }
     });
     /**
      * GET /api/admin/garments
@@ -293,6 +588,28 @@ async function adminRoutes(server) {
         return reply.status(201).send({
             ...newGarment,
             basePrice: Number(newGarment.basePrice),
+        });
+    });
+    /**
+     * PUT /api/admin/garments/:id
+     * Update an existing garment item.
+     */
+    server.put("/api/admin/garments/:id", { preHandler: [auth_1.verifyAuth, (0, auth_1.requireRole)("ADMIN")] }, async (request, reply) => {
+        const { id } = request.params;
+        const body = request.body;
+        const updatedGarment = await server.prisma.garmentItem.update({
+            where: { id },
+            data: {
+                ...(body.name !== undefined && { name: body.name }),
+                ...(body.emoji !== undefined && { emoji: body.emoji }),
+                ...(body.basePrice !== undefined && { basePrice: body.basePrice }),
+                ...(body.unit !== undefined && { unit: body.unit }),
+                ...(body.isActive !== undefined && { isActive: body.isActive }),
+            },
+        });
+        return reply.send({
+            ...updatedGarment,
+            basePrice: Number(updatedGarment.basePrice),
         });
     });
     /**

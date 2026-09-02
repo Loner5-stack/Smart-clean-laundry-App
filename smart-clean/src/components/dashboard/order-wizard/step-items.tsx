@@ -11,9 +11,9 @@ import {
   Trash2,
 } from "lucide-react";
 import {
-  garmentItems,
   getItemsForService,
   stainTypes,
+  type GarmentItem,
 } from "@/data/order-wizard-data";
 import type { OrderState, SelectedItem, BagSelection } from "@/types/order-wizard";
 
@@ -29,9 +29,13 @@ interface Props {
   itemSelectionIndex?: number;
   onAddService?: () => void;
   onRemoveService?: () => void;
+  garments: GarmentItem[];
+  services: AdminService[];
 }
 
-export function StepItems({ order, onChange, itemSelectionIndex = 0, onAddService, onRemoveService }: Props) {
+import type { AdminService } from "@/data/mock-admin";
+
+export function StepItems({ order, onChange, itemSelectionIndex = 0, onAddService, onRemoveService, garments, services }: Props) {
   const { selectedItems, serviceIds, serviceNames, stainFlag } = order;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -39,6 +43,7 @@ export function StepItems({ order, onChange, itemSelectionIndex = 0, onAddServic
   const activeServiceId = serviceIds[itemSelectionIndex] || serviceIds[0] || "";
   const activeServiceName =
     serviceNames[serviceIds.indexOf(activeServiceId)] || "Unknown Service";
+  const activeService = services.find((s) => s.id === activeServiceId);
 
   const isWeightBased = activeServiceId === "svc-1" || activeServiceId === "svc-13";
   const [mode, setMode] = useState<"bag" | "item">("bag");
@@ -84,7 +89,7 @@ export function StepItems({ order, onChange, itemSelectionIndex = 0, onAddServic
       ?.quantity ?? 0;
 
   const updateItem = (itemId: string, sId: string, delta: number) => {
-    const item = garmentItems.find((g) => g.id === itemId)!;
+    const item = garments.find((g) => g.id === itemId)!;
     const existingIndex = selectedItems.findIndex(
       (i) => i.itemId === itemId && i.serviceId === sId,
     );
@@ -135,8 +140,10 @@ export function StepItems({ order, onChange, itemSelectionIndex = 0, onAddServic
     reader.readAsDataURL(file);
   };
 
-  const currentItems = activeServiceId
-    ? getItemsForService(activeServiceId)
+  const itemsToShow = isWeightBased
+    ? []
+    : activeServiceId
+    ? getItemsForService(activeService, garments)
     : [];
   const isLastService = itemSelectionIndex >= serviceIds.length - 1;
 
@@ -277,7 +284,7 @@ export function StepItems({ order, onChange, itemSelectionIndex = 0, onAddServic
 
       {/* ── Items grid ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-6">
-        {currentItems.map((item) => {
+        {itemsToShow.map((item) => {
           const qty = getQty(item.id, activeServiceId);
           const isSelected = qty > 0;
           return (
