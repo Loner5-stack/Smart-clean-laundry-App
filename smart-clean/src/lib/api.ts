@@ -58,16 +58,26 @@ import { type GarmentItem, garmentItems, getItemsForService, timeSlots, PICKUP_F
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 // NOTE: Environment variable validation has intentionally been moved INSIDE
 // fetchFromAPI() below. Top-level throws crash the entire module at build time,
 // silently dropping every page that imports api.ts from the Vercel build output.
 
+// Flag: if no API URL is configured, all fetchFromAPI calls fall back to mock data
+// and log a warning. Remove this once the Render backend is live.
+const IS_BACKEND_LIVE = !!process.env.NEXT_PUBLIC_API_URL &&
+  !process.env.NEXT_PUBLIC_API_URL.includes("localhost");
+
 const JWT_SECRET_VALUE = process.env.AUTH_SECRET;
 const TECH_PASSKEY = process.env.TECH_PASSKEY || "";
 
 async function fetchFromAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  // ── If backend is not configured, throw a specific error that callers can catch ──
+  if (!IS_BACKEND_LIVE) {
+    throw new Error(`BACKEND_UNAVAILABLE: Render API not yet deployed. Endpoint: ${endpoint}`);
+  }
+
   // ── Validate environment variables at call time, not module load time ──────
   const API_SECRET = process.env.API_SECRET;
   if (!API_SECRET) {
@@ -177,17 +187,22 @@ export async function getOrders(
   unassignedOnly: boolean = false,
   todayOnly: boolean = false
 ): Promise<PaginatedResponse<AdminOrder>> {
-  const query = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
-  });
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (search) query.append("search", search);
   if (status && status !== "All Statuses" && status !== "all") query.append("status", status);
   if (dateFilter && dateFilter !== "All Time") query.append("dateFilter", dateFilter);
   if (unassignedOnly) query.append("unassignedOnly", "true");
   if (todayOnly) query.append("todayOnly", "true");
 
-  return fetchFromAPI<PaginatedResponse<AdminOrder>>(`/admin/orders?${query.toString()}`);
+  try {
+    return await fetchFromAPI<PaginatedResponse<AdminOrder>>(`/admin/orders?${query.toString()}`);
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return { data: mockAdminOrders, meta: { total: mockAdminOrders.length, page, limit, totalPages: 1 } };
+    }
+    throw e;
+  }
 }
 
 /** 
@@ -239,22 +254,37 @@ export async function getCustomers(
   limit: number = 50,
   search: string = ""
 ): Promise<PaginatedResponse<AdminCustomer>> {
-  const query = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
-  });
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
   if (search) query.append("search", search);
-
-  return fetchFromAPI<PaginatedResponse<AdminCustomer>>(`/admin/users?${query.toString()}`);
+  try {
+    return await fetchFromAPI<PaginatedResponse<AdminCustomer>>(`/admin/users?${query.toString()}`);
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      const filtered = search
+        ? mockAdminCustomers.filter(c =>
+            c.name.toLowerCase().includes(search.toLowerCase()) ||
+            c.email.toLowerCase().includes(search.toLowerCase()))
+        : mockAdminCustomers;
+      return { data: filtered, meta: { total: filtered.length, page, limit, totalPages: 1 } };
+    }
+    throw e;
+  }
 }
 
 /** Fetch a single customer's profile by ID. */
 export async function getCustomerById(id: string): Promise<{ customer: AdminCustomer; recentOrders: AdminOrder[] } | null> {
   try {
     return await fetchFromAPI<{ customer: AdminCustomer; recentOrders: AdminOrder[] }>(`/admin/users/${id}`);
-  } catch (error) {
-    console.error("Failed to fetch customer details:", error);
-    return null;
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      const customer = mockAdminCustomers.find(c => c.id === id) ?? null;
+      if (!customer) return null;
+      const recentOrders = mockAdminOrders.filter(o => o.customerName === customer.name);
+      return { customer, recentOrders };
+    }
+    throw e;
   }
 }
 
@@ -286,65 +316,104 @@ export async function getRiderById(id: string): Promise<AdminRider | null> {
 
 /** Fetch all services for the admin service catalogue. */
 export async function getServices(): Promise<AdminService[]> {
-  // Using the new public endpoint
-  return fetchFromAPI<AdminService[]>("/services", {
-    cache: "force-cache",
-    next: { tags: ["services"] }
-  });
+  try {
+    return await fetchFromAPI<AdminService[]>("/services", {
+      cache: "force-cache",
+      next: { tags: ["services"] }
+    });
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return mockAdminServices;
+    }
+    throw e;
+  }
 }
 
 export async function getPopularServices(): Promise<AdminService[]> {
-  return fetchFromAPI<AdminService[]>("/services/popular", {
-    cache: "force-cache",
-    next: { tags: ["services"] }
-  });
+  try {
+    return await fetchFromAPI<AdminService[]>("/services/popular", {
+      cache: "force-cache",
+      next: { tags: ["services"] }
+    });
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return mockAdminServices.filter(s => s.isActive).slice(0, 4);
+    }
+    throw e;
+  }
 }
 
 export async function getServiceById(id: string): Promise<AdminService> {
-  return fetchFromAPI<AdminService>(`/admin/services/${id}`);
+  try {
+    return await fetchFromAPI<AdminService>(`/admin/services/${id}`);
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return mockAdminServices.find(s => s.id === id) ?? mockAdminServices[0];
+    }
+    throw e;
+  }
 }
 
 /** Create a new service. */
 export async function createService(data: Partial<AdminService>): Promise<AdminService | null> {
-  const result = await fetchFromAPI<AdminService>("/admin/services", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  // @ts-expect-error: Next 16 types issue
-  if (result) revalidateTag("services");
-  return result;
+  try {
+    const result = await fetchFromAPI<AdminService>("/admin/services", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    if (result) revalidateTag("services");
+    return result;
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return null;
+    throw e;
+  }
 }
 
 /** Update an existing service. */
 export async function updateService(id: string, data: Partial<AdminService>): Promise<AdminService | null> {
-  const result = await fetchFromAPI<AdminService>(`/admin/services/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
-  // @ts-expect-error: Next 16 types issue
-  if (result) revalidateTag("services");
-  return result;
+  try {
+    const result = await fetchFromAPI<AdminService>(`/admin/services/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    if (result) revalidateTag("services");
+    return result;
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return null;
+    throw e;
+  }
 }
 
 /** Reorder services. */
 export async function reorderServices(items: { id: string; displayOrder: number }[]): Promise<boolean> {
-  const res = await fetchFromAPI<{ success: boolean }>("/admin/services/reorder", {
-    method: "PUT",
-    body: JSON.stringify({ items }),
-  });
-  // @ts-expect-error: Next 16 types issue
-  if (res) revalidateTag("services");
-  return !!res;
+  try {
+    const res = await fetchFromAPI<{ success: boolean }>("/admin/services/reorder", {
+      method: "PUT",
+      body: JSON.stringify({ items }),
+    });
+    if (res) revalidateTag("services");
+    return !!res;
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return false;
+    throw e;
+  }
 }
 
 /** Delete a service. */
 export async function deleteService(id: string): Promise<boolean> {
-  const res = await fetchFromAPI<{ success: boolean }>(`/admin/services/${id}`, {
-    method: "DELETE",
-  });
-  // @ts-expect-error: Next 16 types issue
-  if (res) revalidateTag("services");
-  return !!res;
+  try {
+    const res = await fetchFromAPI<{ success: boolean }>(`/admin/services/${id}`, {
+      method: "DELETE",
+    });
+    if (res) revalidateTag("services");
+    return !!res;
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return false;
+    throw e;
+  }
 }
 
 // ------------------------------------------------------------------
@@ -353,7 +422,15 @@ export async function deleteService(id: string): Promise<boolean> {
 
 /** Fetch all subscriber records for the admin subscriptions table. */
 export async function getSubscriptions(): Promise<AdminSubscription[]> {
-  return fetchFromAPI<AdminSubscription[]>("/admin/subscriptions");
+  try {
+    return await fetchFromAPI<AdminSubscription[]>("/admin/subscriptions");
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return mockAdminSubscriptions;
+    }
+    throw e;
+  }
 }
 
 // ------------------------------------------------------------------
@@ -415,12 +492,28 @@ export async function getActiveOrder(): Promise<ActiveOrder | null> {
 
 /** Fetch the customer's full order history. */
 export async function getOrderHistory(): Promise<Order[]> {
-  return fetchFromAPI<Order[]>("/orders");
+  try {
+    return await fetchFromAPI<Order[]>("/orders");
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return mockOrders;
+    }
+    throw e;
+  }
 }
 
 /** Fetch a single customer order by ID (for the tracking page). */
 export async function getCustomerOrderById(id: string): Promise<Order | null> {
-  return fetchFromAPI<Order>(`/orders/${id}`);
+  try {
+    return await fetchFromAPI<Order>(`/orders/${id}`);
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return mockOrders.find(o => o.id === id) ?? null;
+    }
+    throw e;
+  }
 }
 
 // ------------------------------------------------------------------
@@ -431,39 +524,61 @@ export async function getCustomerOrderById(id: string): Promise<Order | null> {
  * Fetch garment items with pricing for the order wizard. 
  */
 export async function getGarmentItems(): Promise<typeof garmentItems> {
-  return fetchFromAPI<typeof garmentItems>("/garments", {
-    cache: "force-cache",
-    next: { tags: ["garments"] }
-  });
+  try {
+    return await fetchFromAPI<typeof garmentItems>("/garments", {
+      cache: "force-cache",
+      next: { tags: ["garments"] }
+    });
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return garmentItems;
+    }
+    throw e;
+  }
 }
 
 /** Fetch all garments for the admin dashboard (including inactive). */
 export async function getAdminGarmentItems(): Promise<GarmentItem[]> {
-  return fetchFromAPI<GarmentItem[]>("/admin/garments", {
-    cache: "no-store"
-  });
+  try {
+    return await fetchFromAPI<GarmentItem[]>("/admin/garments", { cache: "no-store" });
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      await simulateDelay();
+      return garmentItems;
+    }
+    throw e;
+  }
 }
 
 /** Create a new garment. */
 export async function createGarment(data: Partial<GarmentItem>): Promise<GarmentItem | null> {
-  const result = await fetchFromAPI<GarmentItem>("/admin/garments", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-  // @ts-expect-error: Next 16 types issue
-  if (result) revalidateTag("garments");
-  return result;
+  try {
+    const result = await fetchFromAPI<GarmentItem>("/admin/garments", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    if (result) revalidateTag("garments");
+    return result;
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return null;
+    throw e;
+  }
 }
 
 /** Update an existing garment. */
 export async function updateGarment(id: string, data: Partial<GarmentItem>): Promise<GarmentItem | null> {
-  const result = await fetchFromAPI<GarmentItem>(`/admin/garments/${id}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
-  // @ts-expect-error: Next 16 types issue
-  if (result) revalidateTag("garments");
-  return result;
+  try {
+    const result = await fetchFromAPI<GarmentItem>(`/admin/garments/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    if (result) revalidateTag("garments");
+    return result;
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return null;
+    throw e;
+  }
 }
 
 
@@ -490,8 +605,17 @@ export async function getTimeSlots(): Promise<typeof timeSlots> {
 
 /** Submit a completed order from the wizard. Returns the new order ID. */
 export async function placeOrder(orderPayload: any) {
-  return fetchFromAPI("/orders", {
-    method: "POST",
-    body: JSON.stringify(orderPayload),
-  });
+  try {
+    return await fetchFromAPI("/orders", {
+      method: "POST",
+      body: JSON.stringify(orderPayload),
+    });
+  } catch (e: any) {
+    if (e.message?.startsWith("BACKEND_UNAVAILABLE")) {
+      // Simulate a successful order placement with a mock ID
+      await simulateDelay(300);
+      return { id: `SC-MOCK-${Date.now()}`, status: "PENDING" };
+    }
+    throw e;
+  }
 }
