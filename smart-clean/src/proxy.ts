@@ -15,6 +15,17 @@ import { jwtVerify } from "jose";
  */
 
 export async function proxy(request: NextRequest) {
+  try {
+    return await handleProxy(request);
+  } catch (err) {
+    // Safety net: if the proxy itself throws for any reason,
+    // pass the request through rather than returning a 404.
+    console.error("[proxy] Unhandled error — passing through:", err);
+    return NextResponse.next();
+  }
+}
+
+async function handleProxy(request: NextRequest) {
   const { nextUrl } = request;
   const path = nextUrl.pathname;
 
