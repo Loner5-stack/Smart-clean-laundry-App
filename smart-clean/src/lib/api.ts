@@ -18,7 +18,6 @@
  */
 
 import { auth } from "@/auth";
-import { revalidateTag } from "next/cache";
 
 import {
   mockAdminOrders,
@@ -364,7 +363,6 @@ export async function createService(data: Partial<AdminService>): Promise<AdminS
       method: "POST",
       body: JSON.stringify(data),
     });
-    if (result) revalidateTag("services");
     return result;
   } catch (e: any) {
     if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return null;
@@ -379,7 +377,6 @@ export async function updateService(id: string, data: Partial<AdminService>): Pr
       method: "PUT",
       body: JSON.stringify(data),
     });
-    if (result) revalidateTag("services");
     return result;
   } catch (e: any) {
     if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return null;
@@ -394,7 +391,6 @@ export async function reorderServices(items: { id: string; displayOrder: number 
       method: "PUT",
       body: JSON.stringify({ items }),
     });
-    if (res) revalidateTag("services");
     return !!res;
   } catch (e: any) {
     if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return false;
@@ -408,7 +404,6 @@ export async function deleteService(id: string): Promise<boolean> {
     const res = await fetchFromAPI<{ success: boolean }>(`/admin/services/${id}`, {
       method: "DELETE",
     });
-    if (res) revalidateTag("services");
     return !!res;
   } catch (e: any) {
     if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return false;
@@ -558,7 +553,6 @@ export async function createGarment(data: Partial<GarmentItem>): Promise<Garment
       method: "POST",
       body: JSON.stringify(data),
     });
-    if (result) revalidateTag("garments");
     return result;
   } catch (e: any) {
     if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return null;
@@ -573,7 +567,6 @@ export async function updateGarment(id: string, data: Partial<GarmentItem>): Pro
       method: "PUT",
       body: JSON.stringify(data),
     });
-    if (result) revalidateTag("garments");
     return result;
   } catch (e: any) {
     if (e.message?.startsWith("BACKEND_UNAVAILABLE")) return null;
