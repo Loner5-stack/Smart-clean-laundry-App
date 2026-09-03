@@ -324,7 +324,7 @@ smart-clean/
 │   ├── types/
 │   │   └── order-wizard.ts        # Order state types
 │   │
-│   └── middleware.ts              # Role-based route protection
+│   └── proxy.ts                   # Role-based route protection (Next.js 16)
 │
 ├── prisma/
 │   └── schema.prisma              # Database schema

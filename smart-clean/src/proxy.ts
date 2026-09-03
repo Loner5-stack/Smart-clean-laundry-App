@@ -3,7 +3,7 @@ import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-// We initialize auth using ONLY the edge-compatible config for the middleware.
+// We initialize auth using ONLY the edge-compatible config for the proxy.
 const { auth } = NextAuth(authConfig);
 
 // NOTE: AUTH_SECRET validation is deferred to request time (inside the handler)
@@ -29,7 +29,6 @@ export default auth(async (request) => {
     }
     // @ts-expect-error - session.user.role is not fully typed
     if (session?.user?.role && session.user.role !== "CUSTOMER") {
-      // If an Admin or Rider somehow has a legacy NextAuth session, destroy it and kick them out
       const response = NextResponse.redirect(new URL("/login", nextUrl));
       response.cookies.delete("authjs.session-token");
       response.cookies.delete("__Secure-authjs.session-token");
@@ -39,11 +38,11 @@ export default auth(async (request) => {
 
   if (path.startsWith("/admin") && !path.startsWith("/admin/login") && !path.startsWith("/admin/tech-login")) {
     const adminToken = request.cookies.get("sc_admin_session")?.value;
-    
+
     if (!adminToken) {
       return NextResponse.redirect(new URL("/admin/login", nextUrl));
     }
-    
+
     try {
       await jwtVerify(adminToken, SECRET, {
         issuer: "smart-clean-admin",
@@ -74,29 +73,21 @@ export default auth(async (request) => {
     const isCustomer = !session?.user?.role || session.user.role === "CUSTOMER";
 
     if (!isCustomer) {
-      // If a non-customer is logged in via NextAuth (e.g. via Google), 
-      // don't let them access customer pages. 
-      // If they are on a customer auth page, maybe redirect them to their respective portals
       if (path === "/login" || path === "/signup") {
-        // Clear the invalid session and let them view the login page normally
         const response = NextResponse.next();
         response.cookies.delete("authjs.session-token");
         response.cookies.delete("__Secure-authjs.session-token");
         return response;
       }
     } else {
-      // If they haven't completed onboarding and they are NOT on the onboarding page
-      // and NOT trying to log out (which hits /api/auth/signout)
       if (!onboardingComplete && !isOnboardingRoute && !path.startsWith("/api/auth")) {
         return NextResponse.redirect(new URL("/onboarding", nextUrl));
       }
 
-      // If they HAVE completed onboarding, they shouldn't be on the onboarding page
       if (onboardingComplete && isOnboardingRoute) {
         return NextResponse.redirect(new URL("/dashboard", nextUrl));
       }
 
-      // Don't let logged-in customers go to login/signup screens
       if (path === "/login" || path === "/signup") {
         return NextResponse.redirect(new URL("/dashboard", nextUrl));
       }
