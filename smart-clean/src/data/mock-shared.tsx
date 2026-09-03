@@ -12,10 +12,10 @@ import { Check, Shirt, Truck, Clock } from "lucide-react";
 import {
   sharedSubscriptionPlans as basePlans,
   type SharedPlan as BaseSharedPlan,
-} from "./mock-shared";
+} from "./shared-data";
 
 // Re-export everything from the server-safe file so UI files only need one import
-export * from "./mock-shared";
+export * from "./shared-data";
 
 // Extend the base plan type with React icon nodes for UI rendering
 export interface SharedPlanWithIcons extends BaseSharedPlan {

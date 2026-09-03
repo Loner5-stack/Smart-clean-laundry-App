@@ -8,7 +8,7 @@ import {
   trackingStages,
   type TrackingStage,
 } from "@/data/mock-dashboard";
-import { ORDER_STATUS_MAP } from "@/data/mock-shared";
+import { ORDER_STATUS_MAP } from "@/data/shared-data";
 
 /** Returns the status of a stage relative to the current stage */
 function getStageStatus(

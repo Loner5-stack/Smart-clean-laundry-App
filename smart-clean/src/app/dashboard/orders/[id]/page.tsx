@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { mockActiveOrder, mockOrders, trackingStages, type TrackingStage } from "@/data/mock-dashboard";
-import { ORDER_STATUS_MAP } from "@/data/mock-shared";
+import { ORDER_STATUS_MAP } from "@/data/shared-data";
 import { garmentItems, PICKUP_FEE } from "@/data/order-wizard-data";
 
 /** Returns the status of a stage relative to the current stage */

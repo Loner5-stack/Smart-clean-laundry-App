@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, Sparkles, AlertCircle, Shirt, Truck, Clock, ArrowLeft } from "lucide-react";
-import { sharedSubscriptionPlans } from "@/data/mock-shared";
+import { sharedSubscriptionPlans } from "@/data/shared-data";
 
 
 

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, CreditCard, LayoutTemplate, Plus, MoreHorizontal, Calendar, X, Eye, Ban } from "lucide-react";
 import { AdminSubscription } from "@/data/mock-admin";
-import { sharedSubscriptionPlans } from "@/data/mock-shared";
+import { sharedSubscriptionPlans } from "@/data/shared-data";
 import { getSubscriptions } from "@/lib/api";
 import { CustomSelect } from "@/components/ui/custom-select";
 

@@ -14,7 +14,7 @@ import {
   PackageCheck,
   ArrowLeft
 } from "lucide-react";
-import { sharedLoyaltyConfig } from "@/data/mock-shared";
+import { sharedLoyaltyConfig } from "@/data/shared-data";
 
 export default function AccountabilityPageContent({
   totalOrders,

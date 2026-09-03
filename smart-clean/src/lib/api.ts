@@ -47,7 +47,7 @@ import {
   sharedLoyaltyConfig,
   type SharedPlan,
   type LoyaltyTier,
-} from "@/data/mock-shared";
+} from "@/data/shared-data";
 
 import { type GarmentItem, garmentItems, getItemsForService, timeSlots, PICKUP_FEE, stainTypes } from "@/data/order-wizard-data";
 

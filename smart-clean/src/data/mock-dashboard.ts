@@ -27,7 +27,7 @@ export const mockStats = {
   rewardTier: "Bronze" as "Bronze" | "Silver" | "Gold",
 };
 
-import { OrderStatus, orderStatusFlow, ORDER_STATUS_MAP } from "./mock-shared";
+import { OrderStatus, orderStatusFlow, ORDER_STATUS_MAP } from "./shared-data";
 
 // ------------------------------------------------------------------
 // ACTIVE ORDER TRACKER
