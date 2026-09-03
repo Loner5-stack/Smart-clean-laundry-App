@@ -100,7 +100,7 @@ export default function SubscriptionsPage() {
                 </h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-black text-gray-900 dark:text-white">
-                    ${price.toLocaleString("en-US")}
+                    ₦{price.toLocaleString("en-NG")}
                   </span>
                   <span className="text-sm font-medium text-gray-500">
                     /{billing === "monthly" ? "mo" : "qtr"}
@@ -117,13 +117,13 @@ export default function SubscriptionsPage() {
 
               {/* Features List */}
               <div className="flex-1 space-y-4 mb-8">
-                {plan.features.map((feat, i) => (
+                {plan.featureTexts.map((text, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <div className="shrink-0 mt-0.5 text-brand-cobalt opacity-80">
-                      {feat.icon}
+                      <Check size={16} />
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-300 leading-snug">
-                      {feat.text}
+                      {text}
                     </p>
                   </div>
                 ))}
