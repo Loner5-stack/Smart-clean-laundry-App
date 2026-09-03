@@ -14,7 +14,7 @@ import { jwtVerify } from "jose";
  * fully edge-compatible and has zero cold-start risk.
  */
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { nextUrl } = request;
   const path = nextUrl.pathname;
 
