@@ -6,15 +6,22 @@ import { jwtVerify } from "jose";
 // We initialize auth using ONLY the edge-compatible config for the middleware.
 const { auth } = NextAuth(authConfig);
 
-if (!process.env.AUTH_SECRET) {
-  throw new Error("AUTH_SECRET is not defined in environment variables.");
-}
-const SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
+// NOTE: AUTH_SECRET validation is deferred to request time (inside the handler)
+// to avoid crashing the edge runtime at module load when env vars are absent
+// during Vercel's build/prerender phase.
 
 export default auth(async (request) => {
   const { nextUrl, auth: session } = request;
   const isLoggedIn = !!session;
   const path = nextUrl.pathname;
+
+  // Resolve AUTH_SECRET at request time — never at module load
+  const authSecret = process.env.AUTH_SECRET;
+  if (!authSecret) {
+    console.error("AUTH_SECRET is not set — blocking all protected routes");
+    return NextResponse.redirect(new URL("/login", nextUrl));
+  }
+  const SECRET = new TextEncoder().encode(authSecret);
 
   if (path.startsWith("/dashboard")) {
     if (!isLoggedIn) {

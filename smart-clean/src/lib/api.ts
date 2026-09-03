@@ -59,18 +59,24 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
-if (!process.env.API_SECRET) {
-  throw new Error("API_SECRET is not defined in environment variables.");
-}
-if (!process.env.AUTH_SECRET) {
-  throw new Error("AUTH_SECRET is not defined in environment variables.");
-}
 
-const API_SECRET = process.env.API_SECRET;
-const JWT_SECRET = new TextEncoder().encode(process.env.AUTH_SECRET);
+// NOTE: Environment variable validation has intentionally been moved INSIDE
+// fetchFromAPI() below. Top-level throws crash the entire module at build time,
+// silently dropping every page that imports api.ts from the Vercel build output.
+
+const JWT_SECRET_VALUE = process.env.AUTH_SECRET;
 const TECH_PASSKEY = process.env.TECH_PASSKEY || "";
 
 async function fetchFromAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  // ── Validate environment variables at call time, not module load time ──────
+  const API_SECRET = process.env.API_SECRET;
+  if (!API_SECRET) {
+    throw new Error("API_SECRET is not defined in environment variables.");
+  }
+  if (!JWT_SECRET_VALUE) {
+    throw new Error("AUTH_SECRET is not defined in environment variables.");
+  }
+  const JWT_SECRET = new TextEncoder().encode(JWT_SECRET_VALUE);
   let userId = "";
   let userRole = "CUSTOMER";
 
@@ -115,7 +121,8 @@ async function fetchFromAPI<T>(endpoint: string, options: RequestInit = {}): Pro
   if (options.body) {
     headers.set("Content-Type", "application/json");
   }
-  if (TECH_PASSKEY) {
+  // Only send the tech passkey on tech/admin routes — not on customer-facing endpoints
+  if (TECH_PASSKEY && isAdminEndpoint) {
     headers.set("X-Tech-Passkey", TECH_PASSKEY);
   }
 

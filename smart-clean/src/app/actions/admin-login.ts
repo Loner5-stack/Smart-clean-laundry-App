@@ -70,6 +70,7 @@ export async function adminLoginAction(formData: FormData) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/admin",
+      maxAge: 60 * 60 * 24
     });
 
     return { success: true };
