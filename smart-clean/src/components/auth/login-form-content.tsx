@@ -63,25 +63,22 @@ export function LoginFormContent() {
     startTransition(async () => {
       const result = await loginAction(formData);
 
-      if (!result.success) {
+      // If we get here, it means signIn did NOT redirect (error occurred)
+      if (result && !result.success) {
         const errorMsg = result.error ?? "Invalid email or password. Please try again.";
         const lowerMsg = errorMsg.toLowerCase();
         
-        // Intelligently map the error to the right field so it highlights red
         if (lowerMsg.includes("email") || lowerMsg.includes("oauth")) {
           setErrors({ email: errorMsg });
         } else if (lowerMsg.includes("password") || lowerMsg.includes("credentials")) {
           setErrors({ password: errorMsg });
         } else {
-          // Fallback for rate limits or other general errors
           setServerError(errorMsg);
         }
         setShakeKey((prev) => prev + 1);
-        return;
       }
-
-      router.push("/dashboard");
-      router.refresh();
+      // On success, NextAuth handles the redirect server-side to /dashboard
+      // so we don't need router.push here
     });
   };
 

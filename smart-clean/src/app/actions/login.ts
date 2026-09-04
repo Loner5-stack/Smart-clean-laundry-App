@@ -25,13 +25,16 @@ export async function loginAction(formData: FormData) {
     }
 
     const password = formData.get("password");
-    // NextAuth requires the provider and the credentials payload
+    // In NextAuth v5, signIn() in a Server Action throws a redirect internally.
+    // We pass redirectTo so NextAuth redirects to the correct place.
+    // The isRedirectError catch below re-throws it so Next.js processes the redirect.
     await signIn("credentials", {
       email,
       password,
-      redirect: false // We will handle the redirect manually on the client
+      redirectTo: "/dashboard",
     });
     
+    // This line is only reached if signIn doesn't redirect (shouldn't happen normally)
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
