@@ -96,9 +96,11 @@ export function LoginFormContent() {
         return;
       }
 
-      // Session cookie is now set — navigate to dashboard
-      router.push("/dashboard");
-      router.refresh();
+      // Session cookie is now set.
+      // Use a full page navigation (not router.push) so the browser sends
+      // the new session cookie with the request and the server renders
+      // the dashboard with the authenticated session.
+      window.location.href = "/dashboard";
     });
   };
 
