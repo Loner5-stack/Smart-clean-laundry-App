@@ -61,9 +61,9 @@ export function LoginFormContent() {
     setServerError("");
 
     startTransition(async () => {
+      // Step 1: Validate credentials server-side (rate limiting + DB check)
       const result = await loginAction(formData);
 
-      // If we get here, it means signIn did NOT redirect (error occurred)
       if (result && !result.success) {
         const errorMsg = result.error ?? "Invalid email or password. Please try again.";
         const lowerMsg = errorMsg.toLowerCase();
@@ -76,9 +76,29 @@ export function LoginFormContent() {
           setServerError(errorMsg);
         }
         setShakeKey((prev) => prev + 1);
+        return;
       }
-      // On success, NextAuth handles the redirect server-side to /dashboard
-      // so we don't need router.push here
+
+      // Step 2: Credentials are valid — use client-side signIn so the browser
+      // correctly sets the session cookie before navigating
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+
+      const signInResult = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (signInResult?.error) {
+        setServerError("Something went wrong. Please try again.");
+        setShakeKey((prev) => prev + 1);
+        return;
+      }
+
+      // Session cookie is now set — navigate to dashboard
+      router.push("/dashboard");
+      router.refresh();
     });
   };
 
