@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SessionProvider } from "next-auth/react";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "Smart-Clean | Logistics Simplified",
@@ -29,6 +30,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SessionProvider>{children}</SessionProvider>
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>
