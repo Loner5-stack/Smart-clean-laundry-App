@@ -189,7 +189,8 @@ export function LoginFormContent() {
             )}
             <div className="flex justify-end mt-1">
               <Link
-                href="/forgot-password"
+                href="#"
+                onClick={(e) => e.preventDefault()}
                 className="text-xs font-bold text-brand-cobalt hover:underline"
               >
                 Forgot password?
