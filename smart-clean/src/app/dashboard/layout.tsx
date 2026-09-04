@@ -2,9 +2,9 @@ import { Sidebar } from "@/components/dashboard/sidebar";
 import { BottomNav } from "@/components/dashboard/bottom-nav";
 import { TopHeader } from "@/components/dashboard/top-header";
 import { MainScroll } from "@/components/dashboard/main-scroll";
-
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Dashboard | Smart-Clean",
@@ -17,7 +17,24 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  
+
+  // Not logged in → go to login
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  // Wrong role → go to login
+  // @ts-expect-error
+  if (session.user.role && session.user.role !== "CUSTOMER") {
+    redirect("/login");
+  }
+
+  // Onboarding not complete → go to onboarding
+  // @ts-expect-error
+  if (!session.user.onboardingComplete) {
+    redirect("/onboarding");
+  }
+
   let dbUser = null;
   if (session?.user?.id) {
     dbUser = await prisma.user.findUnique({
@@ -25,7 +42,7 @@ export default async function DashboardLayout({
       select: { name: true, role: true, image: true },
     });
   }
-  
+
   return (
     <div className="flex h-screen bg-[#F7F8FA] dark:bg-[#090B11] overflow-hidden">
       {/* Desktop Sidebar */}
